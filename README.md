@@ -77,6 +77,8 @@ import (
 )
 
 func ExampleCompile() {
+
+    // Literal addition
 	pctx := context.Background()
 	ectx := context.Background()
 	exp, _ := parser.ParseExpr("5 + 3")
@@ -87,6 +89,7 @@ func ExampleCompile() {
 		return x + y
 	}
 
+    // using a function with literal parameters
 	pctx = context.WithValue(pctx, "sum", reflect.TypeOf(sum))
 	ectx = context.WithValue(ectx, "sum", reflect.ValueOf(sum))
 	exp, _ = parser.ParseExpr("sum(5,3)")
@@ -94,6 +97,7 @@ func ExampleCompile() {
 	result, _ = fn(ectx)
 	fmt.Printf("%v\n", result)
 
+    // function with variable parameters
 	x := 5
 	y := 3
 	pctx = context.WithValue(pctx, "x", reflect.TypeOf(x))
