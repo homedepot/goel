@@ -522,9 +522,9 @@ func init() {
 			},
 		},
 		{
-			name:                  "unknown expression (inner expression)",
-			expression:            "a[0]",
-			expectedBuildingError: errors.Errorf("1: unknown expression type"),
+			name:          "unknown expression (inner expression)",
+			expression:    "a[0]",
+			expectedValue: reflect.ValueOf(5),
 			parsingContext: map[string]interface{}{
 				"a": reflect.TypeOf([]int{}),
 			},
@@ -544,14 +544,25 @@ func init() {
 			},
 		},
 		{
-			name:                  "unknown expression (map expression)",
-			expression:            `m["foo"]`,
-			expectedBuildingError: errors.Errorf("1: unknown expression type"),
+			name:          "map expression not nil",
+			expression:    `m["foo"]`,
+			expectedValue: reflect.ValueOf(5),
 			parsingContext: map[string]interface{}{
-				"a": reflect.TypeOf(map[string]int{}),
+				"m": reflect.TypeOf(map[string]int{}),
 			},
 			executionContext: map[string]interface{}{
-				"a": reflect.ValueOf(map[string]int{"foo": 5, "bar": 6}),
+				"m": reflect.ValueOf(map[string]int{"foo": 5, "bar": 6}),
+			},
+		},
+		{
+			name:          "map expression nil",
+			expression:    `m["snafu"]`,
+			expectedValue: reflect.ValueOf(0),
+			parsingContext: map[string]interface{}{
+				"m": reflect.TypeOf(map[string]int{}),
+			},
+			executionContext: map[string]interface{}{
+				"m": reflect.ValueOf(map[string]int{"foo": 5, "bar": 6}),
 			},
 		},
 		{
@@ -633,5 +644,3 @@ func contextFromMap(contextMap map[string]interface{}) context.Context {
 	}
 	return pctx
 }
-
-

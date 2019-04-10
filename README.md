@@ -13,14 +13,14 @@ supports the following operations:
 * Types: `string`, `int`, `float64`, `bool`, `struct` types and interfaces
 * Function calls to both globally defined functions and functions 
   attached to types.
+* inner expressions (e.g. `a[x]`)
+* map expressions (e.g. `m["foo"]`)
 
 Notably not supported:
 * type assertion
 * type conversions
 * function literals
-* inner expressions (e.g. `a[x]`)
 * slice expressions (e.g. `a[x:y]`)
-* map expressions (e.g. `m["foo"]`)
 * variadic function calls
 * relation operators: `<` `>` `<=` `>=` 
 * add operators: `^` `|`

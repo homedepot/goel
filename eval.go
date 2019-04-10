@@ -81,6 +81,8 @@ func Compile(ctx context.Context, exp ast.Expr) (ExprFunction, reflect.Type, err
 		return evalCallExpr(ctx, exp)
 	case *ast.SelectorExpr:
 		return evalSelectorExpr(ctx, exp)
+	case *ast.IndexExpr:
+		return evalInnerExpr(ctx,exp)
 	default:
 		return nil, nil, errors.Errorf("%d: unknown expression type", exp.Pos())
 	}
