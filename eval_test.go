@@ -17,8 +17,8 @@ func ExampleCompile() {
 	pctx := context.Background()
 	ectx := context.Background()
 	exp, _ := parser.ParseExpr("5 + 3")
-	fn, _, _ := goel.Compile(pctx, exp)
-	result, _ := fn(ectx)
+	cexp := goel.NewCompiledExpression(pctx, exp)
+	result, _ := cexp.Execute(ectx)
 	fmt.Printf("%v\n", result)
 	sum := func(x, y int) int {
 		return x + y
@@ -27,8 +27,8 @@ func ExampleCompile() {
 	pctx = context.WithValue(pctx, "sum", reflect.TypeOf(sum))
 	ectx = context.WithValue(ectx, "sum", reflect.ValueOf(sum))
 	exp, _ = parser.ParseExpr("sum(5,3)")
-	fn, _, _ = goel.Compile(pctx, exp)
-	result, _ = fn(ectx)
+	cexp = goel.NewCompiledExpression(pctx, exp)
+	result, _ = cexp.Execute(ectx)
 	fmt.Printf("%v\n", result)
 
 	x := 5
@@ -38,8 +38,8 @@ func ExampleCompile() {
 	pctx = context.WithValue(pctx, "y", reflect.TypeOf(y))
 	ectx = context.WithValue(ectx, "y", reflect.ValueOf(y))
 	exp, _ = parser.ParseExpr("sum(x,y)")
-	fn, _, _ = goel.Compile(pctx, exp)
-	result, _ = fn(ectx)
+	cexp = goel.NewCompiledExpression(pctx, exp)
+	result, _ = cexp.Execute(ectx)
 	fmt.Printf("%v\n", result)
 	// Output:
 	// 8
@@ -603,10 +603,11 @@ func TestCompile(t *testing.T) {
 			exp, err := parser.ParseExpr(tst.expression)
 			if tst.expectedParsingError == nil {
 				if assert.NoError(t, err) {
-					fn, fnTyp, err := goel.Compile(pctx, exp)
+					cexp := goel.NewCompiledExpression(pctx, exp)
 					if tst.expectedBuildingError == nil {
 						if assert.NoError(t, err) {
-							actual, err := fn(ectx)
+							fnTyp, err := cexp.ReturnType()
+							actual, err := cexp.Execute(ectx)
 							if tst.expectedExecutionError == nil {
 								assert.True(t, fnTyp.AssignableTo(tst.expectedValue.Type()))
 								if assert.NoError(t, err) {
@@ -619,19 +620,19 @@ func TestCompile(t *testing.T) {
 							} else if err != nil {
 								assert.Equal(t, tst.expectedExecutionError.Error(), err.Error())
 							} else {
-								assert.Failf(t, "expected an execution error but got none: %s", tst.expectedExecutionError.Error())
+								assert.Failf(t, "expected an execution error but got none", "%s", tst.expectedExecutionError.Error())
 							}
 						}
-					} else if err != nil {
-						assert.Equal(t, tst.expectedBuildingError.Error(), err.Error())
+					} else if cexp.Error() != nil {
+						assert.Equal(t, tst.expectedBuildingError.Error(), cexp.Error().Error())
 					} else {
-						assert.Failf(t, "expected a building error but got none: %s", tst.expectedBuildingError.Error())
+						assert.Failf(t, "expected a building error but got none", "%s", tst.expectedBuildingError.Error())
 					}
 				}
 			} else if err != nil {
 				assert.Equal(t, tst.expectedParsingError.Error(), err.Error())
 			} else {
-				assert.Failf(t, "expected a parsing error but got none: %s", tst.expectedParsingError.Error())
+				assert.Failf(t, "expected a parsing error but got none", "%s", tst.expectedParsingError.Error())
 			}
 		})
 	}

@@ -7,19 +7,21 @@ import (
 	"reflect"
 )
 
-func evalInnerExpr(pctx context.Context, exp *ast.IndexExpr) (ExprFunction, reflect.Type, error) {
-	xfn, xtyp, err := Compile(pctx, exp.X)
-	if err != nil {
-		return nil, nil, err
+func evalInnerExpr(pctx context.Context, exp *ast.IndexExpr) CompiledExpression {
+	xexp := compile(pctx, exp.X)
+	if xexp.Error() != nil {
+		return xexp
 	}
+	xtyp, _ := xexp.ReturnType()
 	isPtr := xtyp.Kind() == reflect.Ptr
 	if isPtr {
 		xtyp = xtyp.Elem()
 	}
-	ifn, ityp, err := Compile(pctx, exp.Index)
-	if err != nil {
-		return nil, nil, err
+	iexp := compile(pctx, exp.Index)
+	if iexp.Error() != nil {
+		return iexp
 	}
+	ityp, _ := iexp.ReturnType()
 	etyp := xtyp.Elem()
 	zero := reflect.Zero(etyp)
 	var ktyp reflect.Type
@@ -28,13 +30,13 @@ func evalInnerExpr(pctx context.Context, exp *ast.IndexExpr) (ExprFunction, refl
 	} else if xtyp.Kind() == reflect.Array || xtyp.Kind() == reflect.Slice || xtyp.Kind() == reflect.String {
 		ktyp = IntType
 	} else {
-		return nil, nil, errors.Errorf("%d: not an index type %s", exp.X.Pos(), xtyp.Name())
+		return newErrorExpression(errors.Errorf("%d: not an index type %s", exp.X.Pos(), xtyp.Name()))
 	}
 	if !ityp.AssignableTo(ktyp) {
-		return nil, nil, errors.Errorf("%d: incorrect index type. expected %s, found %s", exp.Index.Pos(), ktyp.Name(), ityp.Name())
+		return newErrorExpression(errors.Errorf("%d: incorrect index type. expected %s, found %s", exp.Index.Pos(), ktyp.Name(), ityp.Name()))
 	}
-	return ExprFunction(func(ectx context.Context) (interface{}, error) {
-		x, err := xfn(ectx)
+	return &compiledExpression{nopExpression{}, ExprFunction(func(ectx context.Context) (interface{}, error) {
+		x, err := xexp.Execute(ectx)
 		if err != nil {
 			return nil, err
 		}
@@ -44,7 +46,7 @@ func evalInnerExpr(pctx context.Context, exp *ast.IndexExpr) (ExprFunction, refl
 		if xxtyp := reflect.TypeOf(x); !xxtyp.AssignableTo(xtyp) {
 			return nil, errors.Errorf("%d: expression evaluated to incorrect type. expected %s found %s", exp.X.Pos(), xtyp.Name(), xxtyp.Name())
 		}
-		i, err := ifn(ectx)
+		i, err := iexp.Execute(ectx)
 		if err != nil {
 			return nil, err
 		}
@@ -83,5 +85,5 @@ func evalInnerExpr(pctx context.Context, exp *ast.IndexExpr) (ExprFunction, refl
 		}
 		v := vv.Interface()
 		return v, nil
-	}), etyp, nil
+	}), etyp}
 }
