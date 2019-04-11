@@ -7,16 +7,40 @@ import (
 	"reflect"
 )
 
-func callFunction(ectx context.Context, exp *ast.CallExpr, fn reflect.Value, argExps []CompiledExpression, returnsError bool) (interface{}, error) {
-	args := make([]reflect.Value, 0, len(argExps))
-	for i, argExp := range argExps {
+type callCompiledExpression struct {
+	nopExpression
+	exp          *ast.CallExpr
+	fnExp        CompiledExpression
+	args         []CompiledExpression
+	returnsError bool
+	returnType   reflect.Type
+}
+
+func (cce *callCompiledExpression) ReturnType() (reflect.Type, error) {
+	return cce.returnType, nil
+}
+
+func (cce *callCompiledExpression) Execute(ectx context.Context) (interface{}, error) {
+	_fn, err := cce.fnExp.Execute(ectx)
+	if err != nil {
+		return nil, err
+	}
+	if _fn == nil {
+		return nil, errors.Errorf("%d: function not found", cce.exp.Fun.Pos())
+	}
+	fn := reflect.ValueOf(_fn)
+	if !fn.IsValid() || fn.Kind() != reflect.Func {
+		return nil, errors.Errorf("%d: not a function", cce.exp.Pos())
+	}
+	args := make([]reflect.Value, 0, len(cce.args))
+	for i, argExp := range cce.args {
 		v, err := argExp.Execute(ectx)
 		if err != nil {
 			return nil, err
 		}
 		argTyp, _ := argExp.ReturnType()
 		if !reflect.TypeOf(v).AssignableTo(argTyp) {
-			return nil, errors.Errorf("%d: type mismatch", exp.Args[i].Pos())
+			return nil, errors.Errorf("%d: type mismatch", cce.exp.Args[i].Pos())
 		}
 		args = append(args, reflect.ValueOf(v))
 	}
@@ -26,12 +50,12 @@ func callFunction(ectx context.Context, exp *ast.CallExpr, fn reflect.Value, arg
 		if expectedNumberOfArgs < len(args) {
 			howMany = "to many"
 		}
-		return nil, errors.Errorf("%d: %s arguments in call.  expected %d, found %d", exp.Pos(), howMany, expectedNumberOfArgs, len(args))
+		return nil, errors.Errorf("%d: %s arguments in call.  expected %d, found %d", cce.exp.Pos(), howMany, expectedNumberOfArgs, len(args))
 	}
 	results := fn.Call(args)
 	var outValues []reflect.Value
 	var errValue *reflect.Value
-	if returnsError {
+	if cce.returnsError {
 		outValues = results[0 : fn.Type().NumOut()-1]
 		errValue = &results[fn.Type().NumOut()-1]
 	} else {
@@ -47,7 +71,6 @@ func callFunction(ectx context.Context, exp *ast.CallExpr, fn reflect.Value, arg
 		}
 		out = outs
 	}
-	var err error
 	if errValue != nil && errValue.CanInterface() && !errValue.IsNil() {
 		err = errValue.Interface().(error)
 	}
@@ -91,58 +114,31 @@ func functionArgs(pctx context.Context, isMember bool, fnType reflect.Type, exp 
 }
 
 func evalCallExpr(pctx context.Context, exp *ast.CallExpr) CompiledExpression {
-	switch fnExp := exp.Fun.(type) {
-	case *ast.Ident:
-		_fnType := pctx.Value(fnExp.Name)
-		if _fnType == nil {
-			return newErrorExpression(errors.Errorf("%d: unknown function %s", fnExp.NamePos, fnExp.Name))
-		}
-		fnType, ok := _fnType.(reflect.Type)
-		if !ok {
-			return newErrorExpression(errors.Errorf("%d: not a function %s", fnExp.NamePos, fnExp.Name))
-		}
-		if fnType.IsVariadic() {
-			return newErrorExpression(errors.Errorf("%d: variadic functions are not supported: %s", fnExp.NamePos, fnExp.Name))
-		}
-		returnsError := functionReturnsError(fnType)
-		argExps, err := functionArgs(pctx, false, fnType, exp)
-		if err != nil {
-			return newErrorExpression(err)
-		}
-		return &compiledExpression{nopExpression{}, ExprFunction(func(ectx context.Context) (interface{}, error) {
-			_fn := ectx.Value(fnExp.Name)
-			if _fn == nil {
-				return nil, errors.Errorf("%d: function %s not found", fnExp.NamePos, fnExp.Name)
-			}
-			fn, ok := _fn.(reflect.Value)
-			if !ok {
-				return nil, errors.Errorf("%d: %s not a function", fnExp.NamePos, fnExp.Name)
-			}
-			return callFunction(ectx, exp, fn, argExps, returnsError)
-		}), fnType.Out(0)}
-	case *ast.SelectorExpr:
-		selExp := evalSelectorExpr(pctx, fnExp)
-		if selExp.Error() != nil {
-			return selExp
-		}
-		funcTyp, _ := selExp.ReturnType()
-		argExps, err := functionArgs(pctx, true, funcTyp, exp)
-		if err != nil {
-			return newErrorExpression(err)
-		}
-		returnsError := functionReturnsError(funcTyp)
-		return &compiledExpression{nopExpression{}, ExprFunction(func(ectx context.Context) (interface{}, error) {
-			_fn, err := selExp.Execute(ectx)
-			if err != nil {
-				return nil, err
-			}
-			fn := reflect.ValueOf(_fn)
-			if err != nil {
-				return nil, err
-			}
-			return callFunction(ectx, exp, fn, argExps, returnsError)
-		}), funcTyp.Out(0)}
-	default:
-		return newErrorExpression(errors.Errorf("%d: unknown expression type: %T", exp.Pos(), exp.Fun))
+	fnExp := compile(pctx, exp.Fun)
+	if fnExp.Error() != nil {
+		return fnExp
 	}
+	fnType, _ := fnExp.ReturnType()
+	if fnType.Kind() != reflect.Func {
+		return newErrorExpression(errors.Errorf("%d: not a function", exp.Lparen))
+	}
+	if fnType.IsVariadic() {
+		return newErrorExpression(errors.Errorf("%d: variadic functions are not supported.", exp.Lparen))
+	}
+	returnsError := functionReturnsError(fnType)
+	argExps, err := functionArgs(pctx, fnExp.HasOwner(), fnType, exp)
+	if err != nil {
+		return newErrorExpression(err)
+	}
+	var returnType reflect.Type
+	var thresholdArgs = 1
+	if returnsError {
+		thresholdArgs = 2
+	}
+	if fnType.NumOut() > thresholdArgs {
+		returnType = reflect.TypeOf([]reflect.Value{})
+	} else {
+		returnType = fnType.Out(0)
+	}
+	return &callCompiledExpression{nopExpression{}, exp, fnExp, argExps, returnsError, returnType}
 }

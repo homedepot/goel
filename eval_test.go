@@ -109,12 +109,12 @@ func init() {
 		{
 			name:                  "type mismatch negation",
 			expression:            `-"5.7"`,
-			expectedBuildingError: errors.New("1: unsupported unary operator: -"),
+			expectedBuildingError: errors.New("1: unsupported unary expression: -string"),
 		},
 		{
 			name:                  "unsupported unary operator (bitwise complement)",
 			expression:            "^5",
-			expectedBuildingError: errors.New("1: unsupported unary operator: ^"),
+			expectedBuildingError: errors.New("1: unsupported unary expression: ^int"),
 		},
 		{
 			name:                  "unsupported unary operator (pointer deref)",
@@ -130,7 +130,7 @@ func init() {
 		{
 			name:                  "unsupported unary operator (pointer to)",
 			expression:            "&x",
-			expectedBuildingError: errors.New("1: unsupported unary operator: &"),
+			expectedBuildingError: errors.New("1: unsupported unary expression: &int"),
 			parsingContext: map[string]interface{}{
 				"x": reflect.TypeOf(x),
 			},
@@ -141,7 +141,7 @@ func init() {
 		{
 			name:                  "unsupported unary operator (channel input)",
 			expression:            "<-c",
-			expectedBuildingError: errors.New("1: unsupported unary operator: <-"),
+			expectedBuildingError: errors.New("1: unsupported unary expression: <-"),
 			parsingContext: map[string]interface{}{
 				"c": reflect.TypeOf(c),
 			},
@@ -502,7 +502,7 @@ func init() {
 		{
 			name:                  "unknown expression (type conversion)",
 			expression:            "float64(x)",
-			expectedBuildingError: errors.Errorf("1: unknown function float64"),
+			expectedBuildingError: errors.Errorf("1: unknown identifier: float64"),
 			parsingContext: map[string]interface{}{
 				"x": goel.IntType,
 			},
@@ -568,7 +568,7 @@ func init() {
 		{
 			name:                  "unknown expression (variadic function call)",
 			expression:            "f(1,2,3)",
-			expectedBuildingError: errors.Errorf("1: variadic functions are not supported: f"),
+			expectedBuildingError: errors.Errorf("2: variadic functions are not supported."),
 			parsingContext: map[string]interface{}{
 				"f": reflect.TypeOf(variadicSum),
 			},
