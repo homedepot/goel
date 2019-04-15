@@ -179,24 +179,64 @@ func init() {
 			expectedBuildingError: errors.Errorf("3: unsupported binary operation ^"),
 		},
 		{
-			name:                  "unsupported operator (less than)",
-			expression:            "5 < 2",
-			expectedBuildingError: errors.Errorf("3: unsupported binary operation <"),
+			name:          "less than false",
+			expression:    "5 < 2",
+			expectedValue: reflect.ValueOf(false),
 		},
 		{
-			name:                  "unsupported operator (less than or equal)",
+			name:          "less than false equal",
+			expression:    "5 < 5",
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:          "less than true",
+			expression:    "2 < 5",
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
+			name:                  "less than or equal false",
 			expression:            "5 <= 2",
-			expectedBuildingError: errors.Errorf("3: unsupported binary operation <="),
+			expectedValue: reflect.ValueOf(false),
 		},
 		{
-			name:                  "unsupported operator (greater than)",
-			expression:            "5 > 2",
-			expectedBuildingError: errors.Errorf("3: unsupported binary operation >"),
+			name:                  "less than or equal true equal",
+			expression:            "2 <= 2",
+			expectedValue: reflect.ValueOf(true),
 		},
 		{
-			name:                  "unsupported operator (greater than or equal)",
+			name:                  "less than or equal true less than",
+			expression:            "2 <= 5",
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
+			name:          "greater than false",
+			expression:    "2 > 5",
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:          "greater than false equal",
+			expression:    "5 > 5",
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:          "greater than true",
+			expression:    "5 > 2",
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
+			name:                  "greater than or equal false",
+			expression:            "2 >= 5",
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:                  "greater than or equal true equal",
+			expression:            "2 >= 2",
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
+			name:                  "greater than or equal true less than",
 			expression:            "5 >= 2",
-			expectedBuildingError: errors.Errorf("3: unsupported binary operation >="),
+			expectedValue: reflect.ValueOf(true),
 		},
 		{
 			name:                  "unsupported operator (bitwise or)",
@@ -530,7 +570,7 @@ func init() {
 		{
 			name:                  "unknown expression (type conversion)",
 			expression:            "float64(x)",
-			expectedBuildingError: errors.Errorf("8: type conversion not supported"),
+			expectedBuildingError: errors.Errorf("1: unknown identifier: float64"),
 			parsingContext: map[string]interface{}{
 				"x": goel.IntType,
 			},

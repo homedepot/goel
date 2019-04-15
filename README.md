@@ -7,10 +7,12 @@ allows the execution of that expression with a context.  It currently
 supports the following operations:
 
 * Binary operators: `+` `-` `*` `/` `==` `!=` `&&` `||` `.`
+* Relation operators: `<` `>` `<=` `>=` 
 * Unary operators: `-` `!`
 * literals: `string`, `int`, `float64`.
   Note: `rune` literals are treated as strings.
-* Types: `string`, `int`, `float64`, `bool`, `struct` types and interfaces
+* Types: `string`, `int`, `float64`, `bool`, `struct` types and 
+  interfaces
 * Function calls to both globally defined functions and functions 
   attached to types.
 * inner expressions (e.g. `a[x]`)
@@ -22,7 +24,6 @@ Notably not supported:
 * function literals
 * slice expressions (e.g. `a[x:y]`)
 * variadic function calls
-* relation operators: `<` `>` `<=` `>=` 
 * add operators: `^` `|`
 * mul operators: `%` `<<` `>>` `&` `&^`
 * unary operators: `+` `^` `*` `&` `<-`

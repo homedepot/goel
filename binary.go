@@ -17,7 +17,7 @@ type binaryCompiledExpression struct {
 	lpos, rpos token.Pos
 }
 
-func newBinaryCompiledExpression(rt reflect.Type,left CompiledExpression, right CompiledExpression, exp *ast.BinaryExpr, op func(l, r interface{}) interface{}) *binaryCompiledExpression {
+func newBinaryCompiledExpression(rt reflect.Type, left CompiledExpression, right CompiledExpression, exp *ast.BinaryExpr, op func(l, r interface{}) interface{}) *binaryCompiledExpression {
 	return &binaryCompiledExpression{nopExpression{}, rt, left, right, op, exp.X.Pos(), exp.Y.Pos()}
 }
 
@@ -55,6 +55,54 @@ func divfloat(l, r interface{}) interface{} {
 
 func divint(l, r interface{}) interface{} {
 	return l.(int) / r.(int)
+}
+
+func gtrint(l, r interface{}) interface{} {
+	return l.(int) > r.(int)
+}
+
+func gtrfloat(l, r interface{}) interface{} {
+	return l.(float64) > r.(float64)
+}
+
+func gtrstring(l, r interface{}) interface{} {
+	return l.(string) > r.(string)
+}
+
+func geqint(l, r interface{}) interface{} {
+	return l.(int) >= r.(int)
+}
+
+func geqfloat(l, r interface{}) interface{} {
+	return l.(float64) >= r.(float64)
+}
+
+func geqstring(l, r interface{}) interface{} {
+	return l.(string) >= r.(string)
+}
+
+func lssint(l, r interface{}) interface{} {
+	return l.(int) < r.(int)
+}
+
+func lssfloat(l, r interface{}) interface{} {
+	return l.(float64) < r.(float64)
+}
+
+func lssstring(l, r interface{}) interface{} {
+	return l.(string) < r.(string)
+}
+
+func leqint(l, r interface{}) interface{} {
+	return l.(int) <= r.(int)
+}
+
+func leqfloat(l, r interface{}) interface{} {
+	return l.(float64) <= r.(float64)
+}
+
+func leqstring(l, r interface{}) interface{} {
+	return l.(string) <= r.(string)
 }
 
 func and(l, r interface{}) interface{} {
@@ -169,8 +217,47 @@ func evalBinaryExpr(pctx context.Context, exp *ast.BinaryExpr) CompiledExpressio
 		return newBinaryCompiledExpression(BoolType, left, right, exp, eq)
 	case token.NEQ:
 		return newBinaryCompiledExpression(BoolType, left, right, exp, neq)
+	case token.GTR:
+		if lt.AssignableTo(IntType) {
+			return newBinaryCompiledExpression(BoolType, left, right, exp, gtrint)
+		} else if lt.AssignableTo(DoubleType) {
+			return newBinaryCompiledExpression(BoolType, left, right, exp, gtrfloat)
+		} else if lt.AssignableTo(StringType) {
+			return newBinaryCompiledExpression(BoolType, left, right, exp, gtrstring)
+		} else {
+			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+		}
+	case token.GEQ:
+		if lt.AssignableTo(IntType) {
+			return newBinaryCompiledExpression(BoolType, left, right, exp, geqint)
+		} else if lt.AssignableTo(DoubleType) {
+			return newBinaryCompiledExpression(BoolType, left, right, exp, geqfloat)
+		} else if lt.AssignableTo(StringType) {
+			return newBinaryCompiledExpression(BoolType, left, right, exp, geqstring)
+		} else {
+			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+		}
+	case token.LSS:
+		if lt.AssignableTo(IntType) {
+			return newBinaryCompiledExpression(BoolType, left, right, exp, lssint)
+		} else if lt.AssignableTo(DoubleType) {
+			return newBinaryCompiledExpression(BoolType, left, right, exp, lssfloat)
+		} else if lt.AssignableTo(StringType) {
+			return newBinaryCompiledExpression(BoolType, left, right, exp, lssstring)
+		} else {
+			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+		}
+	case token.LEQ:
+		if lt.AssignableTo(IntType) {
+			return newBinaryCompiledExpression(BoolType, left, right, exp, leqint)
+		} else if lt.AssignableTo(DoubleType) {
+			return newBinaryCompiledExpression(BoolType, left, right, exp, leqfloat)
+		} else if lt.AssignableTo(StringType) {
+			return newBinaryCompiledExpression(BoolType, left, right, exp, leqstring)
+		} else {
+			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+		}
 	default:
 		return newErrorExpression(errors.Errorf("%d: unsupported binary operation %s", exp.OpPos, exp.Op))
 	}
 }
-
