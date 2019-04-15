@@ -7,15 +7,39 @@ import (
 	"reflect"
 )
 
+// Map of global builtin types defined by go.
+var builtinTypeIdentifiers = map[string]reflect.Type{
+	"string":     StringType,
+	"int":        IntType,
+	"uint":       reflect.TypeOf(uint(0)),
+	"uint8":      reflect.TypeOf(uint8(0)),
+	"uint16":     reflect.TypeOf(uint16(0)),
+	"uint32":     reflect.TypeOf(uint32(0)),
+	"uint64":     reflect.TypeOf(uint64(0)),
+	"int8":       reflect.TypeOf(int8(0)),
+	"int16":      reflect.TypeOf(int16(0)),
+	"int32":      reflect.TypeOf(int32(0)),
+	"int64":      reflect.TypeOf(int64(0)),
+	"float32":    reflect.TypeOf(float32(0.1)),
+	"float64":    DoubleType,
+	"byte":       reflect.TypeOf(byte(0)),
+	"char":       reflect.TypeOf('a'),
+	"complex128": reflect.TypeOf(1 + 1.0i),
+	"complex64":  reflect.TypeOf(complex64(1.0 + 1.0i)),
+	"bool":       BoolType,
+	"error":      ErrorType,
+	"uintptr":    reflect.TypeOf(uintptr(0)),
+}
+
 type typeAssertionCompiledExpression struct {
 	nopExpression
 	exp  *ast.TypeAssertExpr
 	xexp CompiledExpression
-	texp CompiledExpression
+	assertType reflect.Type
 }
 
 func (tace *typeAssertionCompiledExpression) ReturnType() (reflect.Type, error) {
-	return InterfaceType, nil
+	return tace.assertType, nil
 }
 
 func (tace *typeAssertionCompiledExpression) Execute(executionContext context.Context) (interface{}, error) {
@@ -23,20 +47,12 @@ func (tace *typeAssertionCompiledExpression) Execute(executionContext context.Co
 	if err != nil {
 		return nil, err
 	}
-	t, err := tace.texp.Execute(executionContext)
-	if err != nil {
-		return nil, err
+	xvalue := reflect.ValueOf(x)
+	xtyp := xvalue.Type()
+	if xtyp.AssignableTo(tace.assertType) {
+		return xvalue.Convert(tace.assertType).Interface(), nil
 	}
-	if typ, ok := t.(reflect.Type); ok {
-		xvalue := reflect.ValueOf(x)
-		xtyp := xvalue.Type()
-		if xtyp.AssignableTo(typ) {
-			return xvalue.Convert(typ).Interface(), nil
-		}
-		return nil, errors.Errorf("%d: %s is not assignable to %s.", tace.exp.Type.Pos(), xtyp.Name(), typ.Name())
-	} else {
-		return nil, errors.Errorf("%d: type expression is not a type.", tace.exp.Type.Pos())
-	}
+	return nil, errors.Errorf("%d: %s is not assignable to %s.", tace.exp.Type.Pos(), xtyp.Name(), tace.assertType.Name())
 }
 
 func evalTypeAssertionExpr(pctx context.Context, exp *ast.TypeAssertExpr) CompiledExpression {
@@ -44,12 +60,20 @@ func evalTypeAssertionExpr(pctx context.Context, exp *ast.TypeAssertExpr) Compil
 	if xexp.Error() != nil {
 		return xexp
 	}
-	texp := compile(pctx, exp.Type)
-	if texp.Error() != nil {
-		return texp
+	if ident, ok := exp.Type.(*ast.Ident); ok {
+		assertType, ok := builtinTypeIdentifiers[ident.Name]
+		if !ok {
+			_assertType := pctx.Value(ident.Name)
+			if _assertType == nil {
+				return newErrorExpression(errors.Errorf("%d: unknown type %s", ident.NamePos, ident.Name))
+			}
+			assertType, ok = _assertType.(reflect.Type)
+			if !ok {
+				return newErrorExpression(errors.Errorf("%d: expected a reflect.Type in the parsing context for %s but found %T", ident.NamePos, ident.Name, _assertType))
+			}
+		}
+		return &typeAssertionCompiledExpression{nopExpression{}, exp, xexp, assertType}
+	} else {
+		return newErrorExpression(errors.Errorf("%d: expression not supported for type assertion: %s", exp.Type.Pos(), exp.Type))
 	}
-	if ttyp, _ := texp.ReturnType(); !ttyp.AssignableTo(reflect.TypeOf(IntType)) {
-		return newErrorExpression(errors.Errorf("%d: expected a reflect.Type but found %s", exp.Lparen, ttyp.Name()))
-	}
-	return &typeAssertionCompiledExpression{nopExpression{}, exp, xexp, texp}
 }

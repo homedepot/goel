@@ -63,6 +63,10 @@ var tests []test
 var x int
 var c chan int
 
+func bar() interface{} {
+	return "bar"
+}
+
 func init() {
 	var err error
 	testRequest, err = http.NewRequest("GET", "http://localhost/foobar", nil)
@@ -477,13 +481,26 @@ func init() {
 		},
 		{
 			name:          "type assertion success",
-			expression:    "x.(string)",
+			expression:    "bar().(string)",
 			expectedValue: reflect.ValueOf("bar"),
 			parsingContext: map[string]interface{}{
-				"x": goel.InterfaceType,
+				"bar": reflect.TypeOf(bar),
 			},
 			executionContext: map[string]interface{}{
-				"x": reflect.ValueOf("bar"),
+				"bar": reflect.ValueOf(bar),
+			},
+		},
+		{
+			name:          "type assertion success custom type",
+			expression:    "request().(Request).Header.Get(\"Content-Type\")",
+			expectedValue: reflect.ValueOf("application/json"),
+			parsingContext: map[string]interface{}{
+				"request": reflect.TypeOf(returnsRequestAsInterface),
+				"Request": reflect.TypeOf(testRequest),
+			},
+			executionContext: map[string]interface{}{
+				"request": reflect.ValueOf(returnsRequestAsInterface),
+				"Request": reflect.TypeOf(testRequest),
 			},
 		},
 		{
@@ -598,6 +615,10 @@ func variadicSum(values ...int) int {
 	return sum
 }
 
+func returnsRequestAsInterface() interface{} {
+	return testRequest
+}
+
 func returnsError() (int, error) {
 	return 0, errors.New("Boo!")
 }
@@ -616,12 +637,12 @@ func TestCompile(t *testing.T) {
 				if assert.NoError(t, err) {
 					cexp := goel.NewCompiledExpression(pctx, exp)
 					if tst.expectedBuildingError == nil {
-						if assert.NoError(t, err) {
-							fnTyp, err := cexp.ReturnType()
+						if assert.NoError(t, cexp.Error()) {
 							actual, err := cexp.Execute(ectx)
 							if tst.expectedExecutionError == nil {
-								assert.True(t, fnTyp.AssignableTo(tst.expectedValue.Type()))
 								if assert.NoError(t, err) {
+									fnTyp := reflect.TypeOf(actual)
+									assert.True(t, fnTyp.AssignableTo(tst.expectedValue.Type()))
 									if tst.expectedValue.Type().AssignableTo(goel.DoubleType) {
 										assert.InDelta(t, tst.expectedValue.Float(), actual, 0.0001)
 									} else {

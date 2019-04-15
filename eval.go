@@ -8,14 +8,14 @@ import (
 )
 
 var (
-	StringType                = reflect.TypeOf("")
-	IntType                   = reflect.TypeOf(0)
-	DoubleType                = reflect.TypeOf(1.0)
-	BoolType                  = reflect.TypeOf(true)
-	ErrorType                 = reflect.TypeOf((*error)(nil)).Elem()
-	TypeType                  = reflect.TypeOf(reflect.TypeOf(IntType))
-	intr          interface{} = "dummy"
-	InterfaceType             = reflect.TypeOf(intr)
+	intr          interface{}
+	StringType    = reflect.TypeOf("")
+	IntType       = reflect.TypeOf(0)
+	DoubleType    = reflect.TypeOf(1.0)
+	BoolType      = reflect.TypeOf(true)
+	ErrorType     = reflect.TypeOf((*error)(nil)).Elem()
+	TypeType      = reflect.TypeOf(reflect.TypeOf(IntType))
+	InterfaceType = reflect.TypeOf(&intr).Elem()
 )
 
 type CompiledExpression interface {

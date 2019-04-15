@@ -15,9 +15,9 @@ supports the following operations:
   attached to types.
 * inner expressions (e.g. `a[x]`)
 * map expressions (e.g. `m["foo"]`)
+* type assertion (e.g. `foo.(string)`
 
 Notably not supported:
-* type assertion
 * type conversions
 * function literals
 * slice expressions (e.g. `a[x:y]`)
