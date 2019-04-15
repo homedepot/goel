@@ -78,27 +78,23 @@ import (
 )
 
 func ExampleCompile() {
-
-    // Literal addition
 	pctx := context.Background()
 	ectx := context.Background()
 	exp, _ := parser.ParseExpr("5 + 3")
-	fn, _, _ := goel.Compile(pctx, exp)
-	result, _ := fn(ectx)
+	cexp := goel.NewCompiledExpression(pctx, exp)
+	result, _ := cexp.Execute(ectx)
 	fmt.Printf("%v\n", result)
 	sum := func(x, y int) int {
 		return x + y
 	}
 
-    // using a function with literal parameters
 	pctx = context.WithValue(pctx, "sum", reflect.TypeOf(sum))
 	ectx = context.WithValue(ectx, "sum", reflect.ValueOf(sum))
 	exp, _ = parser.ParseExpr("sum(5,3)")
-	fn, _, _ = goel.Compile(pctx, exp)
-	result, _ = fn(ectx)
+	cexp = goel.NewCompiledExpression(pctx, exp)
+	result, _ = cexp.Execute(ectx)
 	fmt.Printf("%v\n", result)
 
-    // function with variable parameters
 	x := 5
 	y := 3
 	pctx = context.WithValue(pctx, "x", reflect.TypeOf(x))
@@ -106,8 +102,8 @@ func ExampleCompile() {
 	pctx = context.WithValue(pctx, "y", reflect.TypeOf(y))
 	ectx = context.WithValue(ectx, "y", reflect.ValueOf(y))
 	exp, _ = parser.ParseExpr("sum(x,y)")
-	fn, _, _ = goel.Compile(pctx, exp)
-	result, _ = fn(ectx)
+	cexp = goel.NewCompiledExpression(pctx, exp)
+	result, _ = cexp.Execute(ectx)
 	fmt.Printf("%v\n", result)
 	// Output:
 	// 8
