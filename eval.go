@@ -8,11 +8,14 @@ import (
 )
 
 var (
-	StringType = reflect.TypeOf("")
-	IntType    = reflect.TypeOf(0)
-	DoubleType = reflect.TypeOf(1.0)
-	BoolType   = reflect.TypeOf(true)
-	ErrorType  = reflect.TypeOf((*error)(nil)).Elem()
+	StringType                = reflect.TypeOf("")
+	IntType                   = reflect.TypeOf(0)
+	DoubleType                = reflect.TypeOf(1.0)
+	BoolType                  = reflect.TypeOf(true)
+	ErrorType                 = reflect.TypeOf((*error)(nil)).Elem()
+	TypeType                  = reflect.TypeOf(reflect.TypeOf(IntType))
+	intr          interface{} = "dummy"
+	InterfaceType             = reflect.TypeOf(intr)
 )
 
 type CompiledExpression interface {
@@ -49,7 +52,7 @@ type errExpression struct {
 }
 
 func newErrorExpression(err error) CompiledExpression {
-	return &errExpression{nopExpression{},err}
+	return &errExpression{nopExpression{}, err}
 }
 
 func (ee *errExpression) Execute(executionContext context.Context) (interface{}, error) {
@@ -62,20 +65,6 @@ func (ee *errExpression) ReturnType() (reflect.Type, error) {
 
 func (ee *errExpression) Error() error {
 	return ee.err
-}
-
-type compiledExpression struct {
-	nopExpression
-	function   ExprFunction
-	returnType reflect.Type
-}
-
-func (ce *compiledExpression) Execute(executionContext context.Context) (interface{}, error) {
-	return ce.function(executionContext)
-}
-
-func (ce *compiledExpression) ReturnType() (reflect.Type, error) {
-	return ce.returnType, nil
 }
 
 func NewCompiledExpression(parseContext context.Context, exp ast.Expr) CompiledExpression {
@@ -91,7 +80,7 @@ func compile(ctx context.Context, exp ast.Expr) CompiledExpression {
 	case *ast.Ident:
 		return evalIdentifierExpr(ctx, exp)
 	case *ast.BasicLit:
-		return evalLiteralExpr(ctx,exp)
+		return evalLiteralExpr(ctx, exp)
 	case *ast.ParenExpr:
 		return compile(ctx, exp.X)
 	case *ast.CallExpr:
@@ -100,9 +89,9 @@ func compile(ctx context.Context, exp ast.Expr) CompiledExpression {
 		return evalSelectorExpr(ctx, exp)
 	case *ast.IndexExpr:
 		return evalInnerExpr(ctx, exp)
+	case *ast.TypeAssertExpr:
+		return evalTypeAssertionExpr(ctx, exp)
 	default:
 		return newErrorExpression(errors.Errorf("%d: unknown expression type", exp.Pos()))
 	}
 }
-
-

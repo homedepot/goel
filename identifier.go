@@ -30,13 +30,36 @@ func (luivce *lookUpIdentifierValueCompiledExpression) Execute(ectx context.Cont
 	}
 }
 
+// Map of global types and constants that are defined in go.
+var literalIdentifiers = map[string]interface{}{
+	"string":     StringType,
+	"int":        IntType,
+	"uint":       reflect.TypeOf(uint(0)),
+	"uint8":      reflect.TypeOf(uint8(0)),
+	"uint16":     reflect.TypeOf(uint16(0)),
+	"uint32":     reflect.TypeOf(uint32(0)),
+	"uint64":     reflect.TypeOf(uint64(0)),
+	"int8":       reflect.TypeOf(int8(0)),
+	"int16":      reflect.TypeOf(int16(0)),
+	"int32":      reflect.TypeOf(int32(0)),
+	"int64":      reflect.TypeOf(int64(0)),
+	"float32":    reflect.TypeOf(float32(0.1)),
+	"float64":    DoubleType,
+	"byte":       reflect.TypeOf(byte(0)),
+	"char":       reflect.TypeOf('a'),
+	"complex128": reflect.TypeOf(1 + 1.0i),
+	"complex64":  reflect.TypeOf(complex64(1.0 + 1.0i)),
+	"bool":       BoolType,
+	"error":      ErrorType,
+	"uintptr":    reflect.TypeOf(uintptr(0)),
+	"true":       true,
+	"false":      false,
+}
+
 func evalIdentifierExpr(pctx context.Context, exp *ast.Ident) CompiledExpression {
-	switch exp.Name {
-	case "true":
-		return literal(true, BoolType)
-	case "false":
-		return literal(false, BoolType)
-	default:
+	if v, ok := literalIdentifiers[exp.Name]; ok {
+		return literal(v, reflect.TypeOf(v))
+	} else {
 		_vtype := pctx.Value(exp.Name)
 		if _vtype != nil {
 			vtype, ok := _vtype.(reflect.Type)

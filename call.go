@@ -120,7 +120,11 @@ func evalCallExpr(pctx context.Context, exp *ast.CallExpr) CompiledExpression {
 	}
 	fnType, _ := fnExp.ReturnType()
 	if fnType.Kind() != reflect.Func {
-		return newErrorExpression(errors.Errorf("%d: not a function", exp.Lparen))
+		if fnType.AssignableTo(TypeType) {
+			return newErrorExpression(errors.Errorf("%d: type conversion not supported", exp.Lparen))
+		} else {
+			return newErrorExpression(errors.Errorf("%d: not a function", exp.Lparen))
+		}
 	}
 	if fnType.IsVariadic() {
 		return newErrorExpression(errors.Errorf("%d: variadic functions are not supported.", exp.Lparen))

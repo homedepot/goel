@@ -465,14 +465,25 @@ func init() {
 			},
 		},
 		{
-			name:                  "unexpected expression (type assertion)",
-			expression:            "x.(string)",
-			expectedBuildingError: errors.Errorf("1: unknown expression type"),
+			name:                   "type assertion failure",
+			expression:             "x.(string)",
+			expectedExecutionError: errors.Errorf("4: int is not assignable to string."),
 			parsingContext: map[string]interface{}{
 				"x": goel.IntType,
 			},
 			executionContext: map[string]interface{}{
 				"x": reflect.ValueOf(2),
+			},
+		},
+		{
+			name:          "type assertion success",
+			expression:    "x.(string)",
+			expectedValue: reflect.ValueOf("bar"),
+			parsingContext: map[string]interface{}{
+				"x": goel.InterfaceType,
+			},
+			executionContext: map[string]interface{}{
+				"x": reflect.ValueOf("bar"),
 			},
 		},
 		{
@@ -502,7 +513,7 @@ func init() {
 		{
 			name:                  "unknown expression (type conversion)",
 			expression:            "float64(x)",
-			expectedBuildingError: errors.Errorf("1: unknown identifier: float64"),
+			expectedBuildingError: errors.Errorf("8: type conversion not supported"),
 			parsingContext: map[string]interface{}{
 				"x": goel.IntType,
 			},
