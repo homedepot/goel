@@ -121,6 +121,21 @@ func init() {
 			expectedBuildingError: errors.New("1: unsupported unary expression: ^int"),
 		},
 		{
+			name:          "simple integer literal add",
+			expression:    "+5",
+			expectedValue: reflect.ValueOf(5),
+		},
+		{
+			name:          "simple double literal add",
+			expression:    "+5.7",
+			expectedValue: reflect.ValueOf(5.7),
+		},
+		{
+			name:                  "type mismatch negation",
+			expression:            `+"5.7"`,
+			expectedBuildingError: errors.New("1: unsupported unary expression: +string"),
+		},
+		{
 			name:                  "unsupported unary operator (pointer deref)",
 			expression:            "*x",
 			expectedBuildingError: errors.New("1: unknown expression type"),

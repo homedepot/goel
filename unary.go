@@ -43,6 +43,14 @@ func negateFloat(v interface{}) interface{} {
 	return -v.(float64)
 }
 
+func plusInt(v interface{}) interface{} {
+	return +(v.(int))
+}
+
+func plusFloat(v interface{}) interface{} {
+	return +(v.(float64))
+}
+
 func evalUnaryExpr(pctx context.Context, exp *ast.UnaryExpr) CompiledExpression {
 	xexp := compile(pctx, exp.X)
 	if xexp.Error() != nil {
@@ -58,11 +66,15 @@ func evalUnaryExpr(pctx context.Context, exp *ast.UnaryExpr) CompiledExpression 
 		switch exp.Op {
 		case token.SUB:
 			return &unaryCompiledExpression{nopExpression{}, exp, xexp, expTyp, negateInt}
+		case token.ADD:
+			return &unaryCompiledExpression{nopExpression{}, exp, xexp, expTyp, plusInt}
 		}
 	case expTyp.AssignableTo(DoubleType):
 		switch exp.Op {
 		case token.SUB:
 			return &unaryCompiledExpression{nopExpression{}, exp, xexp, expTyp, negateFloat}
+		case token.ADD:
+			return &unaryCompiledExpression{nopExpression{}, exp, xexp, expTyp, plusFloat}
 		}
 	}
 	return newErrorExpression(errors.Errorf("%d: unsupported unary expression: %s%s", exp.OpPos, exp.Op.String(), expTyp.Name()))

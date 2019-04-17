@@ -8,7 +8,7 @@ supports the following operations:
 
 * Binary operators: `+` `-` `*` `/` `==` `!=` `&&` `||` `.` `%`
 * Relation operators: `<` `>` `<=` `>=` 
-* Unary operators: `-` `!`
+* Unary operators: `-` `!` `+` 
 * literals: `string`, `int`, `float64`.
   Note: `rune` literals are treated as strings.
 * Types: `string`, `int`, `float64`, `bool`, `struct` types and 
@@ -19,21 +19,22 @@ supports the following operations:
 * map expressions (e.g. `m["foo"]`)
 * type assertion (e.g. `foo.(string)`
 
-Notably not supported:
-* type conversions
-* function literals
-* slice expressions (e.g. `a[x:y]`)
-* variadic function calls
-* add operators: `^` `|`
-* mul operators: `<<` `>>` `&` `&^`
-* unary operators: `+` `^` `*` `&` `<-`
-* composite literals
+Not supported (in priority order):
+1. slice expressions (e.g. `a[x:y]`)
+1. variadic function calls
+1. add operators: `^` `|`
+1. type conversions
+1. mul operators: `<<` `>>` `&` `&^`
+1. unary operators: `^` `*` `&` `<-`
+1. composite literals
+1. function literals
 
 As time goes by, most of these expressions will be accepted.  Here is a
 list of expressions that I doubt will ever be allowed:
 
 * function literals
 * composite literals
+* unary operators: `*` `&` `<-`
 
 ## Contexts
 There are two contexts that are used when evaluating expressions: The
