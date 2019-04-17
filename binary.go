@@ -49,6 +49,10 @@ func mulint(l, r interface{}) interface{} {
 	return l.(int) * r.(int)
 }
 
+func modint(l, r interface{}) interface{} {
+	return l.(int) % r.(int)
+}
+
 func divfloat(l, r interface{}) interface{} {
 	return l.(float64) / r.(float64)
 }
@@ -254,6 +258,12 @@ func evalBinaryExpr(pctx context.Context, exp *ast.BinaryExpr) CompiledExpressio
 			return newBinaryCompiledExpression(BoolType, left, right, exp, leqfloat)
 		} else if lt.AssignableTo(StringType) {
 			return newBinaryCompiledExpression(BoolType, left, right, exp, leqstring)
+		} else {
+			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+		}
+	case token.REM:
+		if lt.AssignableTo(IntType) {
+			return newBinaryCompiledExpression(IntType, left, right, exp, modint)
 		} else {
 			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
 		}

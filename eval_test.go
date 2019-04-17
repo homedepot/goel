@@ -194,18 +194,18 @@ func init() {
 			expectedValue: reflect.ValueOf(true),
 		},
 		{
-			name:                  "less than or equal false",
-			expression:            "5 <= 2",
+			name:          "less than or equal false",
+			expression:    "5 <= 2",
 			expectedValue: reflect.ValueOf(false),
 		},
 		{
-			name:                  "less than or equal true equal",
-			expression:            "2 <= 2",
+			name:          "less than or equal true equal",
+			expression:    "2 <= 2",
 			expectedValue: reflect.ValueOf(true),
 		},
 		{
-			name:                  "less than or equal true less than",
-			expression:            "2 <= 5",
+			name:          "less than or equal true less than",
+			expression:    "2 <= 5",
 			expectedValue: reflect.ValueOf(true),
 		},
 		{
@@ -224,18 +224,18 @@ func init() {
 			expectedValue: reflect.ValueOf(true),
 		},
 		{
-			name:                  "greater than or equal false",
-			expression:            "2 >= 5",
+			name:          "greater than or equal false",
+			expression:    "2 >= 5",
 			expectedValue: reflect.ValueOf(false),
 		},
 		{
-			name:                  "greater than or equal true equal",
-			expression:            "2 >= 2",
+			name:          "greater than or equal true equal",
+			expression:    "2 >= 2",
 			expectedValue: reflect.ValueOf(true),
 		},
 		{
-			name:                  "greater than or equal true less than",
-			expression:            "5 >= 2",
+			name:          "greater than or equal true less than",
+			expression:    "5 >= 2",
 			expectedValue: reflect.ValueOf(true),
 		},
 		{
@@ -244,9 +244,9 @@ func init() {
 			expectedBuildingError: errors.Errorf("3: unsupported binary operation |"),
 		},
 		{
-			name:                  "unsupported operator (modulo)",
-			expression:            "5 % 2",
-			expectedBuildingError: errors.Errorf("3: unsupported binary operation %%"),
+			name:          "modulo",
+			expression:    "5 % 2",
+			expectedValue: reflect.ValueOf(1),
 		},
 		{
 			name:                  "unsupported operator (shift left)",

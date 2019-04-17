@@ -6,7 +6,7 @@ GoEL is an expression language parser that parses a go expression and
 allows the execution of that expression with a context.  It currently
 supports the following operations:
 
-* Binary operators: `+` `-` `*` `/` `==` `!=` `&&` `||` `.`
+* Binary operators: `+` `-` `*` `/` `==` `!=` `&&` `||` `.` `%`
 * Relation operators: `<` `>` `<=` `>=` 
 * Unary operators: `-` `!`
 * literals: `string`, `int`, `float64`.
@@ -25,7 +25,7 @@ Notably not supported:
 * slice expressions (e.g. `a[x:y]`)
 * variadic function calls
 * add operators: `^` `|`
-* mul operators: `%` `<<` `>>` `&` `&^`
+* mul operators: `<<` `>>` `&` `&^`
 * unary operators: `+` `^` `*` `&` `<-`
 * composite literals
 
