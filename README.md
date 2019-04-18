@@ -18,16 +18,14 @@ supports the following operations:
 * inner expressions (e.g. `a[x]`)
 * map expressions (e.g. `m["foo"]`)
 * type assertion (e.g. `foo.(string)`
+* slice expressions on slices (e.g. `a[x:y:m]`)
 
 Not supported (in priority order):
-1. slice expressions (e.g. `a[x:y]`)
 1. variadic function calls
 1. add operators: `^` `|`
 1. type conversions
 1. mul operators: `<<` `>>` `&` `&^`
-1. unary operators: `^` `*` `&` `<-`
-1. composite literals
-1. function literals
+1. unary operators: `^`
 
 As time goes by, most of these expressions will be accepted.  Here is a
 list of expressions that I doubt will ever be allowed:
@@ -35,6 +33,7 @@ list of expressions that I doubt will ever be allowed:
 * function literals
 * composite literals
 * unary operators: `*` `&` `<-`
+* slice expressions on arrays (e.g. `a[x:y]`)
 
 ## Contexts
 There are two contexts that are used when evaluating expressions: The

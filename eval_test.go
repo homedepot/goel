@@ -68,6 +68,13 @@ func bar() interface{} {
 }
 
 func init() {
+	var testArray [6]int
+	testArray[0] = 1
+	testArray[1] = 2
+	testArray[2] = 4
+	testArray[3] = 8
+	testArray[4] = 16
+	testArray[5] = 32
 	var err error
 	testRequest, err = http.NewRequest("GET", "http://localhost/foobar", nil)
 	if err != nil {
@@ -616,14 +623,146 @@ func init() {
 			},
 		},
 		{
-			name:                  "unknown expression (slice expression)",
+			name:          "slice expression on string",
+			expression:    "a[0:1]",
+			expectedValue: reflect.ValueOf("a"),
+			parsingContext: map[string]interface{}{
+				"a": goel.StringType,
+			},
+			executionContext: map[string]interface{}{
+				"a": reflect.ValueOf("abcdef"),
+			},
+		},
+		{
+			name:                  "slice3 expression on string not allowed",
+			expression:            "a[0:1:2]",
+			expectedBuildingError: errors.New("1: type mismatch expected a slice but found string"),
+			parsingContext: map[string]interface{}{
+				"a": goel.StringType,
+			},
+			executionContext: map[string]interface{}{
+				"a": reflect.ValueOf("abcdef"),
+			},
+		},
+		{
+			name:                  "slice expression on array",
 			expression:            "a[0:1]",
-			expectedBuildingError: errors.Errorf("1: unknown expression type"),
+			expectedBuildingError: errors.New("1: type mismatch expected a slice or string but found [6]int"),
+			parsingContext: map[string]interface{}{
+				"a": reflect.TypeOf(&testArray).Elem(),
+			},
+			executionContext: map[string]interface{}{
+				"a": reflect.ValueOf(&testArray).Elem(),
+			},
+		},
+		{
+			name:          "slice expression",
+			expression:    "a[0:1]",
+			expectedValue: reflect.ValueOf([]int{1}),
 			parsingContext: map[string]interface{}{
 				"a": reflect.TypeOf([]int{}),
 			},
 			executionContext: map[string]interface{}{
-				"a": reflect.ValueOf([]int{5, 6}),
+				"a": reflect.ValueOf([]int{1, 2, 4, 8, 16, 32}),
+			},
+		},
+		{
+			name:          "slice expression no lower",
+			expression:    "a[:1]",
+			expectedValue: reflect.ValueOf([]int{1}),
+			parsingContext: map[string]interface{}{
+				"a": reflect.TypeOf([]int{}),
+			},
+			executionContext: map[string]interface{}{
+				"a": reflect.ValueOf([]int{1, 2, 4, 8, 16, 32}),
+			},
+		},
+		{
+			name:          "slice expression no high",
+			expression:    "a[5:]",
+			expectedValue: reflect.ValueOf([]int{32}),
+			parsingContext: map[string]interface{}{
+				"a": reflect.TypeOf([]int{}),
+			},
+			executionContext: map[string]interface{}{
+				"a": reflect.ValueOf([]int{1, 2, 4, 8, 16, 32}),
+			},
+		},
+		{
+			name:          "slice expression w/max",
+			expression:    "a[0:2:3]",
+			expectedValue: reflect.ValueOf([]int{1, 2}),
+			parsingContext: map[string]interface{}{
+				"a": reflect.TypeOf([]int{}),
+			},
+			executionContext: map[string]interface{}{
+				"a": reflect.ValueOf([]int{1, 2, 4, 8, 16, 32}),
+			},
+		},
+		{
+			name:                 "invalid slice expression no max",
+			expression:           "a[0:2:]",
+			expectedParsingError: errors.New("1:6: 3rd index required in 3-index slice"),
+			parsingContext: map[string]interface{}{
+				"a": reflect.TypeOf([]int{}),
+			},
+			executionContext: map[string]interface{}{
+				"a": reflect.ValueOf([]int{1, 2, 4, 8, 16, 32}),
+			},
+		},
+		{
+			name:                   "invalid slice expression low greater than high",
+			expression:             "a[3:2]",
+			expectedExecutionError: errors.New("5: index out of range: 2"),
+			parsingContext: map[string]interface{}{
+				"a": reflect.TypeOf([]int{}),
+			},
+			executionContext: map[string]interface{}{
+				"a": reflect.ValueOf([]int{1, 2, 4, 8, 16, 32}),
+			},
+		},
+		{
+			name:                   "invalid slice expression max less than than high",
+			expression:             "a[2:3:1]",
+			expectedExecutionError: errors.New("7: index out of range: 1"),
+			parsingContext: map[string]interface{}{
+				"a": reflect.TypeOf([]int{}),
+			},
+			executionContext: map[string]interface{}{
+				"a": reflect.ValueOf([]int{1, 2, 4, 8, 16, 32}),
+			},
+		},
+		{
+			name:                   "invalid slice expression low greater than or equal to length",
+			expression:             "a[6:]",
+			expectedExecutionError: errors.New("3: index out of range: 6"),
+			parsingContext: map[string]interface{}{
+				"a": reflect.TypeOf([]int{}),
+			},
+			executionContext: map[string]interface{}{
+				"a": reflect.ValueOf([]int{1, 2, 4, 8, 16, 32}),
+			},
+		},
+		{
+			name:                   "invalid slice expression high greater than or equal to length",
+			expression:             "a[:7]",
+			expectedExecutionError: errors.New("4: index out of range: 7"),
+			parsingContext: map[string]interface{}{
+				"a": reflect.TypeOf([]int{}),
+			},
+			executionContext: map[string]interface{}{
+				"a": reflect.ValueOf([]int{1, 2, 4, 8, 16, 32}),
+			},
+		},
+		{
+			name:                   "invalid slice expression max greater than to capacity",
+			expression:             "a[:6:7]",
+			expectedExecutionError: errors.New("6: index out of range: 7"),
+			parsingContext: map[string]interface{}{
+				"a": reflect.TypeOf([]int{}),
+			},
+			executionContext: map[string]interface{}{
+				"a": reflect.ValueOf([]int{1, 2, 4, 8, 16, 32}),
 			},
 		},
 		{

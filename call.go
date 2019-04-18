@@ -144,5 +144,5 @@ func evalCallExpr(pctx context.Context, exp *ast.CallExpr) CompiledExpression {
 	} else {
 		returnType = fnType.Out(0)
 	}
-	return &callCompiledExpression{nopExpression{}, exp, fnExp, argExps, returnsError, returnType}
+	return &callCompiledExpression{nopExpression{exp}, exp, fnExp, argExps, returnsError, returnType}
 }

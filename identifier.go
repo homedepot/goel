@@ -39,7 +39,7 @@ var literalIdentifiers = map[string]interface{}{
 
 func evalIdentifierExpr(pctx context.Context, exp *ast.Ident) CompiledExpression {
 	if v, ok := literalIdentifiers[exp.Name]; ok {
-		return literal(v, reflect.TypeOf(v))
+		return literal(exp, v, reflect.TypeOf(v))
 	} else {
 		_vtype := pctx.Value(exp.Name)
 		if _vtype != nil {
@@ -47,7 +47,7 @@ func evalIdentifierExpr(pctx context.Context, exp *ast.Ident) CompiledExpression
 			if !ok {
 				return newErrorExpression(errors.Errorf("%d: identifier type is not a reflect.Type: %s(%T)", exp.NamePos, exp.Name, vtype))
 			}
-			return &lookUpIdentifierValueCompiledExpression{nopExpression{}, exp, vtype}
+			return &lookUpIdentifierValueCompiledExpression{nopExpression{exp}, exp, vtype}
 		} else {
 			return newErrorExpression(errors.Errorf("%d: unknown identifier: %s", exp.NamePos, exp.Name))
 		}

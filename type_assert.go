@@ -33,8 +33,8 @@ var builtinTypeIdentifiers = map[string]reflect.Type{
 
 type typeAssertionCompiledExpression struct {
 	nopExpression
-	exp  *ast.TypeAssertExpr
-	xexp CompiledExpression
+	exp        *ast.TypeAssertExpr
+	xexp       CompiledExpression
 	assertType reflect.Type
 }
 

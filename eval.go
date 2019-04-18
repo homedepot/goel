@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/pkg/errors"
 	"go/ast"
+	"go/token"
 	"reflect"
 )
 
@@ -23,11 +24,17 @@ type CompiledExpression interface {
 	ReturnType() (reflect.Type, error)
 	Error() error
 	HasOwner() bool
+	Pos() token.Pos
 }
 
 type ExprFunction func(context.Context) (interface{}, error)
 
 type nopExpression struct {
+	exp ast.Expr
+}
+
+func (nop *nopExpression) Pos() token.Pos {
+	return nop.exp.Pos()
 }
 
 func (nop *nopExpression) Execute() (interface{}, error) {
@@ -91,6 +98,8 @@ func compile(ctx context.Context, exp ast.Expr) CompiledExpression {
 		return evalInnerExpr(ctx, exp)
 	case *ast.TypeAssertExpr:
 		return evalTypeAssertionExpr(ctx, exp)
+	case *ast.SliceExpr:
+		return evalSliceExpr(ctx, exp)
 	default:
 		return newErrorExpression(errors.Errorf("%d: unknown expression type", exp.Pos()))
 	}

@@ -10,11 +10,11 @@ import (
 
 type selectCompiledExpression struct {
 	nopExpression
-	x        CompiledExpression
-	name     string
-	selType  reflect.Type
-	method   reflect.Value
-	pos      token.Pos
+	x       CompiledExpression
+	name    string
+	selType reflect.Type
+	method  reflect.Value
+	pos     token.Pos
 }
 
 func (sce *selectCompiledExpression) HasOwner() bool {
@@ -85,5 +85,5 @@ func evalSelectorExpr(pctx context.Context, exp *ast.SelectorExpr) CompiledExpre
 		selTyp = mf.Type
 		method = mf.Func
 	}
-	return &selectCompiledExpression{nopExpression{}, xexp, exp.Sel.Name, selTyp, method, exp.Pos()}
+	return &selectCompiledExpression{nopExpression{exp}, xexp, exp.Sel.Name, selTyp, method, exp.Pos()}
 }

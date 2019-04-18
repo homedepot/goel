@@ -102,6 +102,6 @@ func evalInnerExpr(pctx context.Context, exp *ast.IndexExpr) CompiledExpression 
 	if !ityp.AssignableTo(ktyp) {
 		return newErrorExpression(errors.Errorf("%d: incorrect index type. expected %s, found %s", exp.Index.Pos(), ktyp.Name(), ityp.Name()))
 	}
-	return &innerCompiledExpression{nopExpression{}, exp, xexp, iexp, xtyp, ktyp, etyp}
+	return &innerCompiledExpression{nopExpression{exp}, exp, xexp, iexp, xtyp, ktyp, etyp}
 
 }

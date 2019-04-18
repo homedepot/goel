@@ -18,7 +18,7 @@ type binaryCompiledExpression struct {
 }
 
 func newBinaryCompiledExpression(rt reflect.Type, left CompiledExpression, right CompiledExpression, exp *ast.BinaryExpr, op func(l, r interface{}) interface{}) *binaryCompiledExpression {
-	return &binaryCompiledExpression{nopExpression{}, rt, left, right, op, exp.X.Pos(), exp.Y.Pos()}
+	return &binaryCompiledExpression{nopExpression{exp}, rt, left, right, op, exp.X.Pos(), exp.Y.Pos()}
 }
 
 func addint(l, r interface{}) interface{} {
