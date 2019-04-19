@@ -35,6 +35,8 @@ list of expressions that I doubt will ever be allowed:
 * unary operators: `*` `&` `<-`
 * slice expressions on arrays (e.g. `a[x:y]`)
 
+# Getting Started
+
 ## Contexts
 There are two contexts that are used when evaluating expressions: The
 parsing context and the execution context.  Each are used to provide
@@ -111,3 +113,23 @@ func ExampleCompile() {
 	// 8
 }
 ```
+
+# CI
+
+Comming Soon...
+
+# Maintainers
+
+Dana H. P'Simer
+
+dana_h_psimer@homedepot.com
+
+# License
+
+This project is released under the Apache 2.0 Open Source License.
+Please see our LICENSE file for details.
+
+# Contributing
+
+Please see our [Contributing](CONTRIBUTING.md) document for details on
+contributing. 
