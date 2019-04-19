@@ -1,4 +1,4 @@
-module github.homedepot.com/dhp236e/goel
+module github.com/homedepot/goel
 
 go 1.12
 

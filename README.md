@@ -74,7 +74,7 @@ package goel_test
 import (
 	"context"
 	"fmt"
-	"github.homedepot.com/dhp236e/goel"
+	"github.com/homedepot/goel"
 	"go/parser"
 	"reflect"
 )

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.homedepot.com/dhp236e/goel"
+	"github.com/homedepot/goel"
 	"go/parser"
 	"net/http"
 	"reflect"
