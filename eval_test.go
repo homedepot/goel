@@ -670,7 +670,7 @@ func init() {
 			},
 		},
 		{
-			name:          "regexp matching",
+			name:          "function invocation",
 			expression:    `matches("[0-9]{3}", x)`,
 			expectedValue: reflect.ValueOf(true),
 			parsingContext: map[string]interface{}{
@@ -683,9 +683,46 @@ func init() {
 			},
 		},
 		{
-			name:          "regexp matching negation",
-			expression:    `matches("[a-z]{3}", x)`,
-			expectedValue: reflect.ValueOf(false),
+			name:          "function invocation w/multiple return values",
+			expression:    `returnsMultiple(false)`,
+			expectedValue: reflect.ValueOf([]interface{}{5, 3.5}),
+			parsingContext: map[string]interface{}{
+				"x":               goel.StringType,
+				"returnsMultiple": reflect.TypeOf(returnsMultiple),
+			},
+			executionContext: map[string]interface{}{
+				"x":               reflect.ValueOf("321"),
+				"returnsMultiple": reflect.ValueOf(returnsMultiple),
+			},
+		},
+		{
+			name:                   "function invocation w/multiple return values returns error",
+			expression:             `returnsMultiple(true)`,
+			expectedExecutionError: errors.New("Boo!"),
+			parsingContext: map[string]interface{}{
+				"x":               goel.StringType,
+				"returnsMultiple": reflect.TypeOf(returnsMultiple),
+			},
+			executionContext: map[string]interface{}{
+				"x":               reflect.ValueOf("321"),
+				"returnsMultiple": reflect.ValueOf(returnsMultiple),
+			},
+		},
+		{
+			name:                  "function invocation too few arguments",
+			expression:            `matches("[0-9]{3}")`,
+			expectedBuildingError: errors.New("19: too few parameters to function call, expected 2, found 1"),
+			parsingContext: map[string]interface{}{
+				"matches": reflect.TypeOf(matchesRegex),
+			},
+			executionContext: map[string]interface{}{
+				"matches": reflect.ValueOf(matchesRegex),
+			},
+		},
+		{
+			name:                  "function invocation too many arguments",
+			expression:            `matches("[0-9]{3}", x, 15)`,
+			expectedBuildingError: errors.New("26: too many parameters to function call, expected 2, found 3"),
 			parsingContext: map[string]interface{}{
 				"x":       goel.StringType,
 				"matches": reflect.TypeOf(matchesRegex),
@@ -693,6 +730,55 @@ func init() {
 			executionContext: map[string]interface{}{
 				"x":       reflect.ValueOf("321"),
 				"matches": reflect.ValueOf(matchesRegex),
+			},
+		},
+		{
+			name:                  "function invocation argument invalid",
+			expression:            `matches("[0-9]{3}", "foo" * "bar")`,
+			expectedBuildingError: errors.New("21: unsupported type string"),
+			parsingContext: map[string]interface{}{
+				"x":       goel.StringType,
+				"matches": reflect.TypeOf(matchesRegex),
+			},
+			executionContext: map[string]interface{}{
+				"x":       reflect.ValueOf("321"),
+				"matches": reflect.ValueOf(matchesRegex),
+			},
+		},
+		{
+			name:                  "function invocation not defined",
+			expression:            `matches("[a-z]{3}", x)`,
+			expectedBuildingError: errors.New("1: unknown identifier: matches"),
+			parsingContext: map[string]interface{}{
+				"x": goel.StringType,
+			},
+			executionContext: map[string]interface{}{
+				"x": reflect.ValueOf("321"),
+			},
+		},
+		{
+			name:                   "function invocation not in execution context",
+			expression:             `matches("[a-z]{3}", x)`,
+			expectedExecutionError: errors.New("1: undefined identifier: matches"),
+			parsingContext: map[string]interface{}{
+				"x":       goel.StringType,
+				"matches": reflect.TypeOf(matchesRegex),
+			},
+			executionContext: map[string]interface{}{
+				"x": reflect.ValueOf("321"),
+			},
+		},
+		{
+			name:                   "second order function invocation returns nil",
+			expression:             `matches()("[a-z]{3}", x)`,
+			expectedExecutionError: errors.New("1: not a function"),
+			parsingContext: map[string]interface{}{
+				"x":       goel.StringType,
+				"matches": reflect.TypeOf(returnsNilFunction),
+			},
+			executionContext: map[string]interface{}{
+				"x":       reflect.ValueOf("321"),
+				"matches": reflect.ValueOf(returnsNilFunction),
 			},
 		},
 		{
@@ -1031,6 +1117,10 @@ func init() {
 	}
 }
 
+func returnsNilFunction() func(regex, str string) bool {
+	return nil
+}
+
 func variadicSum(values ...int) int {
 	sum := 0
 	for _, v := range values {
@@ -1049,6 +1139,14 @@ func returnsError() (int, error) {
 
 func matchesRegex(regex, x string) (bool, error) {
 	return regexp.MatchString(regex, x)
+}
+
+func returnsMultiple(returnError bool) (int, float64, error) {
+	if returnError {
+		return 0, 0, errors.New("Boo!")
+	} else {
+		return 5, 3.5, nil
+	}
 }
 
 func TestCompile(t *testing.T) {

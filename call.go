@@ -25,11 +25,11 @@ func (cce *callCompiledExpression) Execute(ectx context.Context) (interface{}, e
 	if err != nil {
 		return nil, err
 	}
-	if _fn == nil {
-		return nil, errors.Errorf("%d: function not found", cce.exp.Fun.Pos())
-	}
 	fn := reflect.ValueOf(_fn)
-	if !fn.IsValid() || fn.Kind() != reflect.Func {
+	if _fn == nil {
+		return nil, errors.Errorf("%d: function expression returned nil", cce.exp.Fun.Pos())
+	}
+	if !fn.IsValid() || fn.Kind() != reflect.Func || fn.IsNil() {
 		return nil, errors.Errorf("%d: not a function", cce.exp.Pos())
 	}
 	args := make([]reflect.Value, 0, len(cce.args))
@@ -46,9 +46,9 @@ func (cce *callCompiledExpression) Execute(ectx context.Context) (interface{}, e
 	}
 	expectedNumberOfArgs := fn.Type().NumIn()
 	if expectedNumberOfArgs != len(args) {
-		howMany := "to few"
+		howMany := "too few"
 		if expectedNumberOfArgs < len(args) {
-			howMany = "to many"
+			howMany = "too many"
 		}
 		return nil, errors.Errorf("%d: %s arguments in call.  expected %d, found %d", cce.exp.Pos(), howMany, expectedNumberOfArgs, len(args))
 	}
@@ -90,10 +90,10 @@ func functionArgs(pctx context.Context, isMember bool, fnType reflect.Type, exp 
 		argOffset = 1
 	}
 	if expectedNumberofArgs > len(exp.Args) {
-		return nil, errors.Errorf("%d: to few parameters to function call, expected %d, found %d", exp.Pos(), expectedNumberofArgs, len(exp.Args))
+		return nil, errors.Errorf("%d: too few parameters to function call, expected %d, found %d", exp.Rparen, expectedNumberofArgs, len(exp.Args))
 	}
 	if expectedNumberofArgs < len(exp.Args) {
-		return nil, errors.Errorf("%d: to many parameters to function call, expected %d, found %d", exp.Pos(), expectedNumberofArgs, len(exp.Args))
+		return nil, errors.Errorf("%d: too many parameters to function call, expected %d, found %d", exp.Rparen, expectedNumberofArgs, len(exp.Args))
 	}
 	argExps := make([]CompiledExpression, 0, len(exp.Args))
 	for i, argExpr := range exp.Args {
