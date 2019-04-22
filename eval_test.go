@@ -3,9 +3,9 @@ package goel_test
 import (
 	"context"
 	"fmt"
+	"github.com/homedepot/goel"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/homedepot/goel"
 	"go/parser"
 	"net/http"
 	"reflect"
@@ -231,6 +231,66 @@ func init() {
 			expectedValue: reflect.ValueOf(true),
 		},
 		{
+			name:          "less than false (float)",
+			expression:    "5.0 < 2.0",
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:          "less than false equal (float)",
+			expression:    "5.0 < 5.0",
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:          "less than true (float)",
+			expression:    "2.0 < 5.0",
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
+			name:          "less than or equal false (float)",
+			expression:    "5.0 <= 2.0",
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:          "less than or equal true equal (float)",
+			expression:    "2.0 <= 2.0",
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
+			name:          "less than or equal true less than (float)",
+			expression:    "2.0 <= 5.0",
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
+			name:          "less than false (string)",
+			expression:    `"5.0" < "2.0"`,
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:          "less than false equal (string)",
+			expression:    `"5.0" < "5.0"`,
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:          "less than true (string)",
+			expression:    `"2.0" < "5.0"`,
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
+			name:          "less than or equal false (string)",
+			expression:    `"5.0" <= "2.0"`,
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:          "less than or equal true equal (string)",
+			expression:    `"2.0" <= "2.0"`,
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
+			name:          "less than or equal true less than (string)",
+			expression:    `"2.0" <= "5.0"`,
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
 			name:          "greater than false",
 			expression:    "2 > 5",
 			expectedValue: reflect.ValueOf(false),
@@ -246,6 +306,36 @@ func init() {
 			expectedValue: reflect.ValueOf(true),
 		},
 		{
+			name:          "greater than false (float)",
+			expression:    "2.0 > 5.0",
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:          "greater than false equal (float)",
+			expression:    "5.0 > 5.0",
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:          "greater than true (float)",
+			expression:    "5.0 > 2.0",
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
+			name:          "greater than false (string)",
+			expression:    `"a" > "b"`,
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:          "greater than false equal (string)",
+			expression:    `"b" > "b"`,
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:          "greater than true (string)",
+			expression:    `"b" > "a"`,
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
 			name:          "greater than or equal false",
 			expression:    "2 >= 5",
 			expectedValue: reflect.ValueOf(false),
@@ -258,6 +348,36 @@ func init() {
 		{
 			name:          "greater than or equal true less than",
 			expression:    "5 >= 2",
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
+			name:          "greater than or equal false (float)",
+			expression:    "2.0 >= 5.0",
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:          "greater than or equal true equal (float)",
+			expression:    "2.0 >= 2.0",
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
+			name:          "greater than or equal true less than (float)",
+			expression:    "5.0 >= 2.0",
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
+			name:          "greater than or equal false (string)",
+			expression:    `"2" >= "5"`,
+			expectedValue: reflect.ValueOf(false),
+		},
+		{
+			name:          "greater than or equal true equal (string)",
+			expression:    `"2" >= "2"`,
+			expectedValue: reflect.ValueOf(true),
+		},
+		{
+			name:          "greater than or equal true less than (string)",
+			expression:    `"5" >= "2"`,
 			expectedValue: reflect.ValueOf(true),
 		},
 		{
@@ -294,6 +414,11 @@ func init() {
 			name:          "simple literal addition",
 			expression:    "5 + 2",
 			expectedValue: reflect.ValueOf(7),
+		},
+		{
+			name:          "simple literal addition (float)",
+			expression:    "5.0 + 2.0",
+			expectedValue: reflect.ValueOf(7.0),
 		},
 		{
 			name:                  "type mismatch literal addition",
@@ -349,6 +474,11 @@ func init() {
 			name:          "simple literal division",
 			expression:    "5.3 / 2.7",
 			expectedValue: reflect.ValueOf(1.962962),
+		},
+		{
+			name:          "simple literal division (int)",
+			expression:    "5 / 2",
+			expectedValue: reflect.ValueOf(2),
 		},
 		{
 			name:          "simple literal equality",
@@ -414,6 +544,106 @@ func init() {
 			name:          "parenthesized literal expression",
 			expression:    "(5 + 2) * 3",
 			expectedValue: reflect.ValueOf(21),
+		},
+		{
+			name:                   "binary expression left execution error",
+			expression:             `returnsError() == 6`,
+			expectedExecutionError: errors.New("Boo!"),
+			parsingContext: map[string]interface{}{
+				"returnsError": reflect.TypeOf(returnsError),
+			},
+			executionContext: map[string]interface{}{
+				"returnsError": reflect.ValueOf(returnsError),
+			},
+		},
+		{
+			name:                   "binary expression right execution error",
+			expression:             `6 == returnsError()`,
+			expectedExecutionError: errors.New("Boo!"),
+			parsingContext: map[string]interface{}{
+				"returnsError": reflect.TypeOf(returnsError),
+			},
+			executionContext: map[string]interface{}{
+				"returnsError": reflect.ValueOf(returnsError),
+			},
+		},
+		{
+			name:                  "binary expression left build error",
+			expression:            `*3 == 6`,
+			expectedBuildingError: errors.New("1: unknown expression type"),
+		},
+		{
+			name:                  "binary expression right build error",
+			expression:            `6 == *3`,
+			expectedBuildingError: errors.New("6: unknown expression type"),
+		},
+		{
+			name:                  "binary expression unsupported type",
+			expression:            `x == y`,
+			expectedBuildingError: errors.New("3: unsupported binary expression type: *http.Request"),
+			parsingContext: map[string]interface{}{
+				"x": reflect.TypeOf(testRequest),
+				"y": reflect.TypeOf(testRequest),
+			},
+			executionContext: map[string]interface{}{
+				"x": reflect.ValueOf(testRequest),
+				"y": reflect.ValueOf(testRequest),
+			},
+		},
+		{
+			name:                  "add expression unsupported type (bool)",
+			expression:            `true + true`,
+			expectedBuildingError: errors.New("1: unsupported type bool"),
+		},
+		{
+			name:                  "sub expression unsupported type (bool)",
+			expression:            `true - true`,
+			expectedBuildingError: errors.New("1: unsupported type bool"),
+		},
+		{
+			name:                  "mul expression unsupported type (bool)",
+			expression:            `true * true`,
+			expectedBuildingError: errors.New("1: unsupported type bool"),
+		},
+		{
+			name:                  "quo expression unsupported type (bool)",
+			expression:            `true / true`,
+			expectedBuildingError: errors.New("1: unsupported type bool"),
+		},
+		{
+			name:                  "gtr expression unsupported type (bool)",
+			expression:            `true > true`,
+			expectedBuildingError: errors.New("1: unsupported type bool"),
+		},
+		{
+			name:                  "geq expression unsupported type (bool)",
+			expression:            `true >= true`,
+			expectedBuildingError: errors.New("1: unsupported type bool"),
+		},
+		{
+			name:                  "ltr expression unsupported type (bool)",
+			expression:            `true < true`,
+			expectedBuildingError: errors.New("1: unsupported type bool"),
+		},
+		{
+			name:                  "leq expression unsupported type (bool)",
+			expression:            `true <= true`,
+			expectedBuildingError: errors.New("1: unsupported type bool"),
+		},
+		{
+			name:                  "rem expression unsupported type (bool)",
+			expression:            `true % true`,
+			expectedBuildingError: errors.New("1: unsupported type bool"),
+		},
+		{
+			name:                  "LAND expression unsupported type (int)",
+			expression:            `5 && 1`,
+			expectedBuildingError: errors.New("1: unsupported type int"),
+		},
+		{
+			name:                  "LOR expression unsupported type (int)",
+			expression:            `5 || 1`,
+			expectedBuildingError: errors.New("1: unsupported type int"),
 		},
 		{
 			name:          "simple variable addition",
