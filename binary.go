@@ -216,9 +216,8 @@ func evalGtrBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right Compile
 		return newBinaryCompiledExpression(BoolType, left, right, exp, gtrfloat)
 	} else if lt.AssignableTo(StringType) {
 		return newBinaryCompiledExpression(BoolType, left, right, exp, gtrstring)
-	} else {
-		return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
 	}
+	return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
 }
 
 func evalGEqBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right CompiledExpression) CompiledExpression {
@@ -228,9 +227,8 @@ func evalGEqBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right Compile
 		return newBinaryCompiledExpression(BoolType, left, right, exp, geqfloat)
 	} else if lt.AssignableTo(StringType) {
 		return newBinaryCompiledExpression(BoolType, left, right, exp, geqstring)
-	} else {
-		return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
 	}
+	return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
 }
 
 func evalLssBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right CompiledExpression) CompiledExpression {
@@ -240,9 +238,8 @@ func evalLssBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right Compile
 		return newBinaryCompiledExpression(BoolType, left, right, exp, lssfloat)
 	} else if lt.AssignableTo(StringType) {
 		return newBinaryCompiledExpression(BoolType, left, right, exp, lssstring)
-	} else {
-		return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
 	}
+	return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
 }
 
 func evalLEqBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right CompiledExpression) CompiledExpression {
@@ -252,9 +249,8 @@ func evalLEqBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right Compile
 		return newBinaryCompiledExpression(BoolType, left, right, exp, leqfloat)
 	} else if lt.AssignableTo(StringType) {
 		return newBinaryCompiledExpression(BoolType, left, right, exp, leqstring)
-	} else {
-		return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
 	}
+	return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
 }
 
 func evalRemBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right CompiledExpression) CompiledExpression {
