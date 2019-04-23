@@ -28,9 +28,17 @@ var (
 
 // CompiledExpression represents a expression that has been compiled from a source string.
 type CompiledExpression interface {
+	// Execute will execute the expression with the given execution context and return the result or an error.
 	Execute(executionContext context.Context) (interface{}, error)
+	// ReturnType will return the type the expression is expected to return or an error if the expression did not
+	// compile successfully
 	ReturnType() (reflect.Type, error)
+	// Error returns any building error that may have occurred.
 	Error() error
+}
+
+type compiledExpression interface {
+	CompiledExpression
 	HasOwner() bool
 	Pos() token.Pos
 }
@@ -64,7 +72,7 @@ type errExpression struct {
 	err error
 }
 
-func newErrorExpression(err error) CompiledExpression {
+func newErrorExpression(err error) compiledExpression {
 	return &errExpression{nopExpression{}, err}
 }
 
@@ -85,7 +93,7 @@ func NewCompiledExpression(parseContext context.Context, exp ast.Expr) CompiledE
 	return compile(parseContext, exp)
 }
 
-func compile(ctx context.Context, exp ast.Expr) CompiledExpression {
+func compile(ctx context.Context, exp ast.Expr) compiledExpression {
 	switch exp := exp.(type) {
 	case *ast.BinaryExpr:
 		return evalBinaryExpr(ctx, exp)

@@ -10,7 +10,7 @@ import (
 type sliceCompiledExpression struct {
 	nopExpression
 	sliceExp               *ast.SliceExpr
-	xexp, hexp, lexp, mexp CompiledExpression
+	xexp, hexp, lexp, mexp compiledExpression
 	returnType             reflect.Type
 	slice3                 bool
 }
@@ -19,7 +19,7 @@ func (sce *sliceCompiledExpression) ReturnType() (reflect.Type, error) {
 	return sce.returnType, nil
 }
 
-func verifyIntExpression(executionContext context.Context, lexp CompiledExpression, min, max int) (int, error) {
+func verifyIntExpression(executionContext context.Context, lexp compiledExpression, min, max int) (int, error) {
 	_l, err := lexp.Execute(executionContext)
 	if err != nil {
 		return -1, err
@@ -64,7 +64,7 @@ func (sce *sliceCompiledExpression) Execute(executionContext context.Context) (i
 	return xv.Slice(l, h).Interface(), nil
 }
 
-func newSliceCompiledExpression(sliceExp *ast.SliceExpr, returnType reflect.Type, xexp, hexp, lexp, mexp CompiledExpression, slice3 bool) CompiledExpression {
+func newSliceCompiledExpression(sliceExp *ast.SliceExpr, returnType reflect.Type, xexp, hexp, lexp, mexp compiledExpression, slice3 bool) compiledExpression {
 	return &sliceCompiledExpression{nopExpression{sliceExp}, sliceExp, xexp, hexp, lexp, mexp, returnType, slice3}
 }
 
@@ -89,11 +89,11 @@ func (lce *lengthCompiledExpression) Execute(executionContext context.Context) (
 	return nil, errors.Errorf("%d: expected an array, slice, or string found %T", 0, s)
 }
 
-func newLengthCompiledExpression(xexp CompiledExpression) CompiledExpression {
+func newLengthCompiledExpression(xexp compiledExpression) compiledExpression {
 	return &lengthCompiledExpression{nopExpression{}, xexp}
 }
 
-func evalSliceExpr(pctx context.Context, exp *ast.SliceExpr) CompiledExpression {
+func evalSliceExpr(pctx context.Context, exp *ast.SliceExpr) compiledExpression {
 	xexp := compile(pctx, exp.X)
 	if xexp.Error() != nil {
 		return xexp
@@ -106,7 +106,7 @@ func evalSliceExpr(pctx context.Context, exp *ast.SliceExpr) CompiledExpression 
 		return newErrorExpression(errors.Errorf("%d: type mismatch expected a slice or string but found %s", xexp.Pos(), xt))
 	}
 	returnType := xt
-	var hexp, lexp, mexp CompiledExpression
+	var hexp, lexp, mexp compiledExpression
 	if exp.Low != nil {
 		lexp = compile(pctx, exp.Low)
 	} else {

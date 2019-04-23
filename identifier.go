@@ -36,7 +36,7 @@ var literalIdentifiers = map[string]interface{}{
 	"false": false,
 }
 
-func evalIdentifierExpr(pctx context.Context, exp *ast.Ident) CompiledExpression {
+func evalIdentifierExpr(pctx context.Context, exp *ast.Ident) compiledExpression {
 	if v, ok := literalIdentifiers[exp.Name]; ok {
 		return literal(exp, v, reflect.TypeOf(v))
 	}

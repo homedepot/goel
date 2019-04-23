@@ -28,11 +28,11 @@ func (lce *literalCompiledExpression) ReturnType() (reflect.Type, error) {
 	return lce.typ, nil
 }
 
-func literal(exp ast.Expr, v interface{}, t reflect.Type) CompiledExpression {
+func literal(exp ast.Expr, v interface{}, t reflect.Type) compiledExpression {
 	return &literalCompiledExpression{nopExpression{exp}, v, t}
 }
 
-func evalLiteralExpr(ctx context.Context, exp *ast.BasicLit) CompiledExpression {
+func evalLiteralExpr(ctx context.Context, exp *ast.BasicLit) compiledExpression {
 	switch exp.Kind {
 	case token.INT:
 		i, _ := strconv.Atoi(exp.Value)

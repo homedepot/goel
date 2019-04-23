@@ -51,7 +51,7 @@ func plusFloat(v interface{}) interface{} {
 	return +(v.(float64))
 }
 
-func evalUnaryExpr(pctx context.Context, exp *ast.UnaryExpr) CompiledExpression {
+func evalUnaryExpr(pctx context.Context, exp *ast.UnaryExpr) compiledExpression {
 	xexp := compile(pctx, exp.X)
 	if xexp.Error() != nil {
 		return xexp

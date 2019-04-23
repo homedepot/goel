@@ -55,7 +55,7 @@ func (tace *typeAssertionCompiledExpression) Execute(executionContext context.Co
 	return nil, errors.Errorf("%d: %s is not assignable to %s.", tace.exp.Type.Pos(), xtyp.Name(), tace.assertType.Name())
 }
 
-func evalTypeAssertionExpr(pctx context.Context, exp *ast.TypeAssertExpr) CompiledExpression {
+func evalTypeAssertionExpr(pctx context.Context, exp *ast.TypeAssertExpr) compiledExpression {
 	xexp := compile(pctx, exp.X)
 	if xexp.Error() != nil {
 		return xexp

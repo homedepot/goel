@@ -60,7 +60,7 @@ func (sce *selectCompiledExpression) ReturnType() (reflect.Type, error) {
 	return sce.selType, nil
 }
 
-func evalSelectorExpr(pctx context.Context, exp *ast.SelectorExpr) CompiledExpression {
+func evalSelectorExpr(pctx context.Context, exp *ast.SelectorExpr) compiledExpression {
 	xexp := compile(pctx, exp.X)
 	if xexp.Error() != nil {
 		return xexp

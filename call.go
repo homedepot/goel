@@ -10,8 +10,8 @@ import (
 type callCompiledExpression struct {
 	nopExpression
 	exp          *ast.CallExpr
-	fnExp        CompiledExpression
-	args         []CompiledExpression
+	fnExp        compiledExpression
+	args         []compiledExpression
 	returnsError bool
 	returnType   reflect.Type
 }
@@ -61,7 +61,7 @@ func (cce *callCompiledExpression) Execute(ectx context.Context) (interface{}, e
 	return out, err
 }
 
-func collectArgumentValues(ectx context.Context, fn reflect.Value, argExps []CompiledExpression) ([]reflect.Value, error) {
+func collectArgumentValues(ectx context.Context, fn reflect.Value, argExps []compiledExpression) ([]reflect.Value, error) {
 	args := make([]reflect.Value, 0, len(argExps))
 	for _, argExp := range argExps {
 		v, err := argExp.Execute(ectx)
@@ -90,7 +90,7 @@ func functionReturnsError(fnType reflect.Type) bool {
 	return returnsError
 }
 
-func functionArgs(pctx context.Context, isMember bool, fnType reflect.Type, exp *ast.CallExpr) ([]CompiledExpression, error) {
+func functionArgs(pctx context.Context, isMember bool, fnType reflect.Type, exp *ast.CallExpr) ([]compiledExpression, error) {
 	expectedNumberofArgs := fnType.NumIn()
 	argOffset := 0
 	if isMember {
@@ -103,7 +103,7 @@ func functionArgs(pctx context.Context, isMember bool, fnType reflect.Type, exp 
 	if expectedNumberofArgs < len(exp.Args) {
 		return nil, errors.Errorf("%d: too many parameters to function call, expected %d, found %d", exp.Rparen, expectedNumberofArgs, len(exp.Args))
 	}
-	argExps := make([]CompiledExpression, 0, len(exp.Args))
+	argExps := make([]compiledExpression, 0, len(exp.Args))
 	for i, argExpr := range exp.Args {
 		argExp := compile(pctx, argExpr)
 		if argExp.Error() != nil {
@@ -121,7 +121,7 @@ func functionArgs(pctx context.Context, isMember bool, fnType reflect.Type, exp 
 	return argExps, nil
 }
 
-func evalCallExpr(pctx context.Context, exp *ast.CallExpr) CompiledExpression {
+func evalCallExpr(pctx context.Context, exp *ast.CallExpr) compiledExpression {
 	fnExp := compile(pctx, exp.Fun)
 	if fnExp.Error() != nil {
 		return fnExp

@@ -74,7 +74,7 @@ func (ice *innerCompiledExpression) Execute(ectx context.Context) (interface{}, 
 	return v, nil
 }
 
-func evalInnerExpr(pctx context.Context, exp *ast.IndexExpr) CompiledExpression {
+func evalInnerExpr(pctx context.Context, exp *ast.IndexExpr) compiledExpression {
 	xexp := compile(pctx, exp.X)
 	if xexp.Error() != nil {
 		return xexp
