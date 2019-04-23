@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-func ExampleCompile() {
+func ExampleNewCompiledExpressionCompile() {
 	pctx := context.Background()
 	ectx := context.Background()
 	exp, _ := parser.ParseExpr("5 + 3")

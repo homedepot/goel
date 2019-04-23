@@ -149,6 +149,121 @@ func (bce *binaryCompiledExpression) ReturnType() (reflect.Type, error) {
 	return bce.returnType, nil
 }
 
+func evalAddBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right CompiledExpression) CompiledExpression {
+	switch {
+	case lt.AssignableTo(StringType):
+		return newBinaryCompiledExpression(lt, left, right, exp, addstring)
+	case lt.AssignableTo(IntType):
+		return newBinaryCompiledExpression(lt, left, right, exp, addint)
+	case lt.AssignableTo(DoubleType):
+		return newBinaryCompiledExpression(lt, left, right, exp, addfloat)
+	default:
+		return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+	}
+}
+
+func evalSubBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right CompiledExpression) CompiledExpression {
+	switch {
+	case lt.AssignableTo(IntType):
+		return newBinaryCompiledExpression(lt, left, right, exp, subint)
+	case lt.AssignableTo(DoubleType):
+		return newBinaryCompiledExpression(lt, left, right, exp, subfloat)
+	default:
+		return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+	}
+}
+
+func evalMulBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right CompiledExpression) CompiledExpression {
+	switch {
+	case lt.AssignableTo(IntType):
+		return newBinaryCompiledExpression(lt, left, right, exp, mulint)
+	case lt.AssignableTo(DoubleType):
+		return newBinaryCompiledExpression(lt, left, right, exp, mulfloat)
+	default:
+		return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+	}
+}
+
+func evalQuoBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right CompiledExpression) CompiledExpression {
+	switch {
+	case lt.AssignableTo(IntType):
+		return newBinaryCompiledExpression(lt, left, right, exp, divint)
+	case lt.AssignableTo(DoubleType):
+		return newBinaryCompiledExpression(lt, left, right, exp, divfloat)
+	default:
+		return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+	}
+}
+
+func evalLAndBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right CompiledExpression) CompiledExpression {
+	if lt.AssignableTo(BoolType) {
+		return newBinaryCompiledExpression(BoolType, left, right, exp, and)
+	}
+	return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+}
+
+func evalLOrBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right CompiledExpression) CompiledExpression {
+	if lt.AssignableTo(BoolType) {
+		return newBinaryCompiledExpression(BoolType, left, right, exp, or)
+	}
+	return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+}
+
+func evalGtrBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right CompiledExpression) CompiledExpression {
+	if lt.AssignableTo(IntType) {
+		return newBinaryCompiledExpression(BoolType, left, right, exp, gtrint)
+	} else if lt.AssignableTo(DoubleType) {
+		return newBinaryCompiledExpression(BoolType, left, right, exp, gtrfloat)
+	} else if lt.AssignableTo(StringType) {
+		return newBinaryCompiledExpression(BoolType, left, right, exp, gtrstring)
+	} else {
+		return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+	}
+}
+
+func evalGEqBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right CompiledExpression) CompiledExpression {
+	if lt.AssignableTo(IntType) {
+		return newBinaryCompiledExpression(BoolType, left, right, exp, geqint)
+	} else if lt.AssignableTo(DoubleType) {
+		return newBinaryCompiledExpression(BoolType, left, right, exp, geqfloat)
+	} else if lt.AssignableTo(StringType) {
+		return newBinaryCompiledExpression(BoolType, left, right, exp, geqstring)
+	} else {
+		return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+	}
+}
+
+func evalLssBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right CompiledExpression) CompiledExpression {
+	if lt.AssignableTo(IntType) {
+		return newBinaryCompiledExpression(BoolType, left, right, exp, lssint)
+	} else if lt.AssignableTo(DoubleType) {
+		return newBinaryCompiledExpression(BoolType, left, right, exp, lssfloat)
+	} else if lt.AssignableTo(StringType) {
+		return newBinaryCompiledExpression(BoolType, left, right, exp, lssstring)
+	} else {
+		return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+	}
+}
+
+func evalLEqBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right CompiledExpression) CompiledExpression {
+	if lt.AssignableTo(IntType) {
+		return newBinaryCompiledExpression(BoolType, left, right, exp, leqint)
+	} else if lt.AssignableTo(DoubleType) {
+		return newBinaryCompiledExpression(BoolType, left, right, exp, leqfloat)
+	} else if lt.AssignableTo(StringType) {
+		return newBinaryCompiledExpression(BoolType, left, right, exp, leqstring)
+	} else {
+		return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+	}
+}
+
+func evalRemBinaryExpr(exp *ast.BinaryExpr, lt reflect.Type, left, right CompiledExpression) CompiledExpression {
+	if lt.AssignableTo(IntType) {
+		return newBinaryCompiledExpression(IntType, left, right, exp, modint)
+	}
+	return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
+}
+
 func evalBinaryExpr(pctx context.Context, exp *ast.BinaryExpr) CompiledExpression {
 	left := compile(pctx, exp.X)
 	if left.Error() != nil {
@@ -168,105 +283,31 @@ func evalBinaryExpr(pctx context.Context, exp *ast.BinaryExpr) CompiledExpressio
 	}
 	switch exp.Op {
 	case token.ADD:
-		switch {
-		case lt.AssignableTo(StringType):
-			return newBinaryCompiledExpression(lt, left, right, exp, addstring)
-		case lt.AssignableTo(IntType):
-			return newBinaryCompiledExpression(lt, left, right, exp, addint)
-		case lt.AssignableTo(DoubleType):
-			return newBinaryCompiledExpression(lt, left, right, exp, addfloat)
-		default:
-			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
-		}
+		return evalAddBinaryExpr(exp, lt, left, right)
 	case token.SUB:
-		switch {
-		case lt.AssignableTo(IntType):
-			return newBinaryCompiledExpression(lt, left, right, exp, subint)
-		case lt.AssignableTo(DoubleType):
-			return newBinaryCompiledExpression(lt, left, right, exp, subfloat)
-		default:
-			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
-		}
+		return evalSubBinaryExpr(exp, lt, left, right)
 	case token.MUL:
-		switch {
-		case lt.AssignableTo(IntType):
-			return newBinaryCompiledExpression(lt, left, right, exp, mulint)
-		case lt.AssignableTo(DoubleType):
-			return newBinaryCompiledExpression(lt, left, right, exp, mulfloat)
-		default:
-			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
-		}
+		return evalMulBinaryExpr(exp, lt, left, right)
 	case token.QUO:
-		switch {
-		case lt.AssignableTo(IntType):
-			return newBinaryCompiledExpression(lt, left, right, exp, divint)
-		case lt.AssignableTo(DoubleType):
-			return newBinaryCompiledExpression(lt, left, right, exp, divfloat)
-		default:
-			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
-		}
+		return evalQuoBinaryExpr(exp, lt, left, right)
 	case token.LAND:
-		if lt.AssignableTo(BoolType) {
-			return newBinaryCompiledExpression(BoolType, left, right, exp, and)
-		} else {
-			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
-		}
+		return evalLAndBinaryExpr(exp, lt, left, right)
 	case token.LOR:
-		if lt.AssignableTo(BoolType) {
-			return newBinaryCompiledExpression(BoolType, left, right, exp, or)
-		} else {
-			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
-		}
+		return evalLOrBinaryExpr(exp, lt, left, right)
 	case token.EQL:
 		return newBinaryCompiledExpression(BoolType, left, right, exp, eq)
 	case token.NEQ:
 		return newBinaryCompiledExpression(BoolType, left, right, exp, neq)
 	case token.GTR:
-		if lt.AssignableTo(IntType) {
-			return newBinaryCompiledExpression(BoolType, left, right, exp, gtrint)
-		} else if lt.AssignableTo(DoubleType) {
-			return newBinaryCompiledExpression(BoolType, left, right, exp, gtrfloat)
-		} else if lt.AssignableTo(StringType) {
-			return newBinaryCompiledExpression(BoolType, left, right, exp, gtrstring)
-		} else {
-			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
-		}
+		return evalGtrBinaryExpr(exp, lt, left, right)
 	case token.GEQ:
-		if lt.AssignableTo(IntType) {
-			return newBinaryCompiledExpression(BoolType, left, right, exp, geqint)
-		} else if lt.AssignableTo(DoubleType) {
-			return newBinaryCompiledExpression(BoolType, left, right, exp, geqfloat)
-		} else if lt.AssignableTo(StringType) {
-			return newBinaryCompiledExpression(BoolType, left, right, exp, geqstring)
-		} else {
-			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
-		}
+		return evalGEqBinaryExpr(exp, lt, left, right)
 	case token.LSS:
-		if lt.AssignableTo(IntType) {
-			return newBinaryCompiledExpression(BoolType, left, right, exp, lssint)
-		} else if lt.AssignableTo(DoubleType) {
-			return newBinaryCompiledExpression(BoolType, left, right, exp, lssfloat)
-		} else if lt.AssignableTo(StringType) {
-			return newBinaryCompiledExpression(BoolType, left, right, exp, lssstring)
-		} else {
-			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
-		}
+		return evalLssBinaryExpr(exp, lt, left, right)
 	case token.LEQ:
-		if lt.AssignableTo(IntType) {
-			return newBinaryCompiledExpression(BoolType, left, right, exp, leqint)
-		} else if lt.AssignableTo(DoubleType) {
-			return newBinaryCompiledExpression(BoolType, left, right, exp, leqfloat)
-		} else if lt.AssignableTo(StringType) {
-			return newBinaryCompiledExpression(BoolType, left, right, exp, leqstring)
-		} else {
-			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
-		}
+		return evalLEqBinaryExpr(exp, lt, left, right)
 	case token.REM:
-		if lt.AssignableTo(IntType) {
-			return newBinaryCompiledExpression(IntType, left, right, exp, modint)
-		} else {
-			return newErrorExpression(errors.Errorf("%d: unsupported type %s", exp.X.Pos(), lt.Name()))
-		}
+		return evalRemBinaryExpr(exp, lt, left, right)
 	default:
 		return newErrorExpression(errors.Errorf("%d: unsupported binary operation %s", exp.OpPos, exp.Op))
 	}

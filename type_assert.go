@@ -73,7 +73,6 @@ func evalTypeAssertionExpr(pctx context.Context, exp *ast.TypeAssertExpr) Compil
 			}
 		}
 		return &typeAssertionCompiledExpression{nopExpression{}, exp, xexp, assertType}
-	} else {
-		return newErrorExpression(errors.Errorf("%d: expression not supported for type assertion: %s", exp.Type.Pos(), exp.Type))
 	}
+	return newErrorExpression(errors.Errorf("%d: expression not supported for type assertion: %s", exp.Type.Pos(), exp.Type))
 }

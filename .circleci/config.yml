@@ -13,3 +13,20 @@ jobs:
           go build ./...
           go test -coverprofile=coverage.txt -covermode=count ./...
           bash <(curl -s https://codecov.io/bash)
+  build110:
+    docker:
+      - image: circleci/golang:1.10
+    environment:
+      GO_VENDOR_EXPERIMENT: 1
+    steps:
+      - checkout
+      -run :
+        command: |
+          vgo mod download
+          vgo build ./...
+          vgo test ./...
+workflow:
+  build:
+    jobs:
+      - build
+      - build110

@@ -30,9 +30,8 @@ func verifyIntExpression(executionContext context.Context, lexp CompiledExpressi
 	}
 	if min <= l && l <= max {
 		return l, nil
-	} else {
-		return -1, errors.Errorf("%d: index out of range: %d", lexp.Pos(), l)
 	}
+	return -1, errors.Errorf("%d: index out of range: %d", lexp.Pos(), l)
 }
 
 func (sce *sliceCompiledExpression) Execute(executionContext context.Context) (interface{}, error) {
@@ -61,9 +60,8 @@ func (sce *sliceCompiledExpression) Execute(executionContext context.Context) (i
 			return nil, err
 		}
 		return xv.Slice3(l, h, m).Interface(), nil
-	} else {
-		return xv.Slice(l, h).Interface(), nil
 	}
+	return xv.Slice(l, h).Interface(), nil
 }
 
 func newSliceCompiledExpression(sliceExp *ast.SliceExpr, returnType reflect.Type, xexp, hexp, lexp, mexp CompiledExpression, slice3 bool) CompiledExpression {
@@ -104,9 +102,8 @@ func evalSliceExpr(pctx context.Context, exp *ast.SliceExpr) CompiledExpression 
 	if (xt.Kind() != reflect.Slice && xt.Kind() != reflect.String) || (exp.Slice3 && xt.Kind() == reflect.String) {
 		if exp.Slice3 {
 			return newErrorExpression(errors.Errorf("%d: type mismatch expected a slice but found %s", xexp.Pos(), xt))
-		} else {
-			return newErrorExpression(errors.Errorf("%d: type mismatch expected a slice or string but found %s", xexp.Pos(), xt))
 		}
+		return newErrorExpression(errors.Errorf("%d: type mismatch expected a slice or string but found %s", xexp.Pos(), xt))
 	}
 	returnType := xt
 	var hexp, lexp, mexp CompiledExpression

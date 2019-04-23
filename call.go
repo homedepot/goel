@@ -32,25 +32,9 @@ func (cce *callCompiledExpression) Execute(ectx context.Context) (interface{}, e
 	if !fn.IsValid() || fn.Kind() != reflect.Func || fn.IsNil() {
 		return nil, errors.Errorf("%d: not a function", cce.exp.Pos())
 	}
-	args := make([]reflect.Value, 0, len(cce.args))
-	for i, argExp := range cce.args {
-		v, err := argExp.Execute(ectx)
-		if err != nil {
-			return nil, err
-		}
-		argTyp, _ := argExp.ReturnType()
-		if !reflect.TypeOf(v).AssignableTo(argTyp) {
-			return nil, errors.Errorf("%d: type mismatch", cce.exp.Args[i].Pos())
-		}
-		args = append(args, reflect.ValueOf(v))
-	}
-	expectedNumberOfArgs := fn.Type().NumIn()
-	if expectedNumberOfArgs != len(args) {
-		howMany := "too few"
-		if expectedNumberOfArgs < len(args) {
-			howMany = "too many"
-		}
-		return nil, errors.Errorf("%d: %s arguments in call.  expected %d, found %d", cce.exp.Pos(), howMany, expectedNumberOfArgs, len(args))
+	args, err := collectArgumentValues(ectx, fn, cce.args)
+	if err != nil {
+		return nil, err
 	}
 	results := fn.Call(args)
 	var outValues []reflect.Value
@@ -77,6 +61,30 @@ func (cce *callCompiledExpression) Execute(ectx context.Context) (interface{}, e
 	return out, err
 }
 
+func collectArgumentValues(ectx context.Context, fn reflect.Value, argExps []CompiledExpression) ([]reflect.Value, error) {
+	args := make([]reflect.Value, 0, len(argExps))
+	for _, argExp := range argExps {
+		v, err := argExp.Execute(ectx)
+		if err != nil {
+			return nil, err
+		}
+		argTyp, _ := argExp.ReturnType()
+		if !reflect.TypeOf(v).AssignableTo(argTyp) {
+			return nil, errors.Errorf("%d: type mismatch", argExp.Pos())
+		}
+		args = append(args, reflect.ValueOf(v))
+	}
+	expectedNumberOfArgs := fn.Type().NumIn()
+	if expectedNumberOfArgs != len(args) {
+		howMany := "too few"
+		if expectedNumberOfArgs < len(args) {
+			howMany = "too many"
+		}
+		return nil, errors.Errorf("%d: %s arguments in call.  expected %d, found %d", argExps[0].Pos(), howMany, expectedNumberOfArgs, len(args))
+	}
+	return args, nil
+}
+
 func functionReturnsError(fnType reflect.Type) bool {
 	returnsError := fnType.Out(fnType.NumOut() - 1).Implements(ErrorType)
 	return returnsError
@@ -86,7 +94,7 @@ func functionArgs(pctx context.Context, isMember bool, fnType reflect.Type, exp 
 	expectedNumberofArgs := fnType.NumIn()
 	argOffset := 0
 	if isMember {
-		expectedNumberofArgs -= 1
+		expectedNumberofArgs--
 		argOffset = 1
 	}
 	if expectedNumberofArgs > len(exp.Args) {
@@ -122,9 +130,8 @@ func evalCallExpr(pctx context.Context, exp *ast.CallExpr) CompiledExpression {
 	if fnType.Kind() != reflect.Func {
 		if fnType.AssignableTo(TypeType) {
 			return newErrorExpression(errors.Errorf("%d: type conversion not supported", exp.Lparen))
-		} else {
-			return newErrorExpression(errors.Errorf("%d: not a function", exp.Lparen))
 		}
+		return newErrorExpression(errors.Errorf("%d: not a function", exp.Lparen))
 	}
 	if fnType.IsVariadic() {
 		return newErrorExpression(errors.Errorf("%d: variadic functions are not supported.", exp.Lparen))
