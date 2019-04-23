@@ -4,7 +4,7 @@ jobs:
     docker:
     - image: circleci/golang:1.11
     environment:
-      CODECOV_TOKEN: afe61631-c421-4009-92bb-079d37ac0916
+      CODECOV_TOKEN: "c694484c-c0bd-4254-a341-92de61fa0e31"
     steps:
     - checkout
     - run:
@@ -13,20 +13,20 @@ jobs:
           go build ./...
           go test -coverprofile=coverage.txt -covermode=count ./...
           bash <(curl -s https://codecov.io/bash)
-  build110:
-    docker:
-      - image: circleci/golang:1.10
-    environment:
-      GO_VENDOR_EXPERIMENT: 1
-    steps:
-      - checkout
-      -run :
-        command: |
-          vgo mod download
-          vgo build ./...
-          vgo test ./...
-workflow:
-  build:
-    jobs:
-      - build
-      - build110
+#  build110:
+#    docker:
+#      - image: circleci/golang:1.10
+#    environment:
+#      GO_VENDOR_EXPERIMENT: 1
+#    steps:
+#      - checkout
+#      -run :
+#        command: |
+#          vgo mod download
+#          vgo build ./...
+#          vgo test ./...
+#workflow:
+#  build:
+#    jobs:
+#      - build
+#      - build110

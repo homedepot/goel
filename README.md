@@ -1,7 +1,7 @@
 
 [![Go Lang Version](https://img.shields.io/badge/go-1.12-00ADD8.svg?style=plastic)](http://golang.com)
 [![Go Doc](https://img.shields.io/badge/godoc-reference-00ADD8.svg?style=plastic)](https://godoc.org/github.com/homedepot/goel)
-[![Go Report Card](https://goreportcard.com/badge/github.com/homedepto/goel?style=plastic)](https://goreportcard.com/report/github.com/homedepot/goel)
+[![Go Report Card](https://goreportcard.com/badge/github.com/homedepot/goel?style=plastic)](https://goreportcard.com/report/github.com/homedepot/goel)
 [![codecov](https://img.shields.io/codecov/c/github/homedepot/goel.svg?style=plastic)](https://codecov.io/gh/homedepot/goel)
 [![CircleCI](https://img.shields.io/circleci/project/github/homedepot/goel.svg?style=plastic)](https://circleci.com/gh/homedepot/goel/tree/master)
 
