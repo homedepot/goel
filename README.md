@@ -119,6 +119,10 @@ func ExampleCompile() {
 }
 ```
 
+For more details on how to use this API, see the
+[go doc](https://godoc.org/github.com/homedepot/goel) and the
+[pages site](https://homedepot.github.io/goel/)
+
 # CI
 
 Coming Soon...
