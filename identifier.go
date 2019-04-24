@@ -23,7 +23,7 @@ func (luivce *lookUpIdentifierValueCompiledExpression) Execute(ectx context.Cont
 		return nil, errors.Errorf("%d: undefined identifier: %s", luivce.exp.NamePos, luivce.exp.Name)
 	}
 	v, ok := _v.(reflect.Value)
-	if ok && v.IsValid() && luivce.typ.AssignableTo(v.Type()) {
+	if ok && v.IsValid() && v.Type().AssignableTo(luivce.typ) {
 		return v.Interface(), nil
 	}
 	return nil, errors.Errorf("%d: value type mismatch: %s with type %v", luivce.exp.NamePos, luivce.exp.Name, v)

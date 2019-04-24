@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<meta name="generator" content="Hugo 0.55.3" />
+    <title>GoEL</title>
+    
+      <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="revised" content="2019-04-24T14:47:29 EDT">
+<title> :: GoEL</title>
+<link rel="shortcut icon" href="/goel/images/favicon.png" type="image/x-icon" />
+<link href="/goel/css/font-awesome.min.css" rel="stylesheet">
+<link href="/goel/css/nucleus.css" rel="stylesheet">
+<link href="/goel/theme-flex/style.css" rel="stylesheet">
+
+	<link href="/goel/theme-flex/variant-blue.css" rel="stylesheet">
+
+<link rel="stylesheet" href="/goel/css/bootstrap.min.css">
+<script src="/goel/js/jquery-2.x.min.js"></script>
+<script type="text/javascript">
+      var baseurl = "https:\/\/homedepot.github.io\/goel";
+</script>
+<meta name="description" content="">
+
+
+
+    
+  </head>
+  <body data-url="/goel/">
+    
+      <header>
+  <div class="logo">
+    
+	
+  
+    <a class="baselink" href="https://homedepot.github.io/goel">GoEL</a>
+  
+
+
+  </div>
+  <div class="burger"><a href="javascript:void(0);" style="font-size:15px;">&#9776;</a></div>
+    <nav class="shortcuts">
+            <li class="" role="">
+                <a href="https://github.com/homedepot/goel"  rel="noopener">
+                  <i class='fa fa-github'></i> <label>Github repo</label>
+                </a>
+            </li>
+            <li class="" role="">
+                <a href="/goel/credits"  rel="noopener">
+                  <i class='fa fa-bullhorn'></i> <label>Credits</label>
+                </a>
+            </li>
+    </nav>
+</header>
+<article>
+  <aside>
+    <ul class="menu">
+
+
+
+
+    </ul>
+    <section>
+    </section>
+  </aside>
+  <section class="page">
+    
+    <div class="nav-select">
+      <center>Navigation : 
+        <select onchange="javascript:location.href = this.value;">
+          
+
+
+
+        </select>
+      </center>
+    </div>
+      <div>
+        <div class="searchbox">
+          <input data-search-input id="search-by" type="text" placeholder="Search...">
+        </div>
+        <script type="text/javascript" src="/goel/js/lunr.min.js"></script>
+        <script type="text/javascript" src="/goel/js/auto-complete.js"></script>
+        <link href="/goel/css/auto-complete.css" rel="stylesheet">
+        <script type="text/javascript">
+          
+              var baseurl = "https:\/\/homedepot.github.io\/goel";
+          
+        </script>
+        <script type="text/javascript" src="/goel/js/search.js"></script>
+      </div>
+    
+
+    
+    
+    
+    
+<span id="sidebar-toggle-span">
+<a href="#" id="sidebar-toggle" data-sidebar-toggle=""><i class="fa fa-bars"></i> navigation</a>
+</span>
+ 
+
+
+<h1 id="documentation">Documentation</h1>
+
+<h2 id="what-is-goel">What is GoEL?</h2>
+
+<p>GoEL is an interpreter for <a href="https://golang.org/ref/spec#Expressions">golang expressions</a>.
+Expressions are handled in 3 steps.  First, the expression needs to be parsed by
+the <a href="https://golang.org/pkg/go/parser/#ParseExpr">go expression parsing API</a>
+that produces an AST.  Second, the expression is &ldquo;compiled&rdquo; by the goel API that
+takes the AST and an accompanying <code>Context</code> containing information about
+available variables, types, and functions.  Third, the expression can be
+executed, multiple times, by passing in an execution <code>Context</code> containing the
+values of the variables and functions.</p>
+
+<h2 id="the-parsing-context">The Parsing Context</h2>
+
+<p>The parsing context contains type information for variables, types and functions.
+For each identifier that is not a built (e.g. true or int), the parsing context
+is required to return the <a href="https://golang.org/pkg/reflect/#Type">reflect.Type</a>
+for the identifier.  For instance, if an <code>int</code> variable named <code>foo</code> needs to be
+exposed to the expression being compiled, an entry should be added to the
+parsing context named &ldquo;foo&rdquo; and it should have the value of <code>reflect.Type</code> for
+int.</p>
+
+<h2 id="the-execution-context">The Execution Context</h2>
+
+<p>The Execution Context contains the actual values that will be made available to
+the expression when it is executed. There should be an entry in the execution
+context for each value in the parsing context. In the case of variables and
+functions the execution context must contain the <a href="https://golang.org/pkg/reflect/#Value">reflect.Value</a>
+for the variable or function.  In the case of types, the <code>reflect.Type</code> value
+passed to the parsing context should be passed.</p>
+
+<table>
+<thead>
+<tr>
+<th>Class of Identifier</th>
+<th>Parsing Context Value</th>
+<th>Execution Context Value</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>type</td>
+<td>reflect.TypeOf(&lt;the type&gt;)</td>
+<td>reflect.TypeOf(&lt;the type&gt;)</td>
+</tr>
+
+<tr>
+<td>variable</td>
+<td>reflect.TypeOf(&lt;the variable&gt;)</td>
+<td>reflect.ValueOf(&lt;the variable&gt;)</td>
+</tr>
+
+<tr>
+<td>function</td>
+<td>reflect.TypeOf(&lt;function name&gt;)</td>
+<td>reflect.ValueOf(&lt;function name&gt;)</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="safety">Safety</h2>
+
+<p>This API is designed to run a stateless expression but the rules of go do not
+require that you make things stateless.  You could, for instance, have a
+variable for a map that a function call can modify.  This is unsafe.  It
+produces code that is likely to have bugs.  Also because structs and interfaces
+can have functions attached and GoEL gives you access to those methods, you may
+be able to modify the variables passed into the context.  In most cases it would
+be best to pass readonly interfaces of your types.  For example the following
+code passes a struct by reference to the context and does not prevent a call to
+A.SetName:</p>
+<div class="highlight"><pre style="color:#272822;background-color:#fafafa;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#75af00">main</span>
+
+<span style="color:#f92672">import</span> <span style="color:#111">(</span>
+	<span style="color:#d88200">&#34;context&#34;</span>
+	<span style="color:#d88200">&#34;fmt&#34;</span>
+	<span style="color:#d88200">&#34;github.com/homedepot/goel&#34;</span>
+	<span style="color:#d88200">&#34;github.com/pkg/errors&#34;</span>
+	<span style="color:#d88200">&#34;go/parser&#34;</span>
+	<span style="color:#d88200">&#34;reflect&#34;</span>
+<span style="color:#111">)</span>
+
+<span style="color:#00a8c8">type</span> <span style="color:#75af00">A</span> <span style="color:#00a8c8">struct</span> <span style="color:#111">{</span>
+	<span style="color:#75af00">name</span> <span style="color:#00a8c8">string</span>
+<span style="color:#111">}</span>
+
+<span style="color:#00a8c8">func</span> <span style="color:#111">(</span><span style="color:#75af00">a</span> <span style="color:#f92672">*</span><span style="color:#75af00">A</span><span style="color:#111">)</span> <span style="color:#75af00">Name</span><span style="color:#111">()</span> <span style="color:#00a8c8">string</span> <span style="color:#111">{</span>
+	<span style="color:#00a8c8">return</span> <span style="color:#75af00">a</span><span style="color:#111">.</span><span style="color:#75af00">name</span>
+<span style="color:#111">}</span>
+
+<span style="color:#00a8c8">func</span> <span style="color:#111">(</span><span style="color:#75af00">a</span> <span style="color:#f92672">*</span><span style="color:#75af00">A</span><span style="color:#111">)</span> <span style="color:#75af00">SetName</span><span style="color:#111">(</span><span style="color:#75af00">newName</span> <span style="color:#00a8c8">string</span><span style="color:#111">)</span> <span style="color:#00a8c8">string</span> <span style="color:#111">{</span>
+	<span style="color:#75af00">oldName</span> <span style="color:#f92672">:=</span> <span style="color:#75af00">a</span><span style="color:#111">.</span><span style="color:#75af00">name</span>
+	<span style="color:#75af00">a</span><span style="color:#111">.</span><span style="color:#75af00">name</span> <span style="color:#111">=</span> <span style="color:#75af00">newName</span>
+	<span style="color:#00a8c8">return</span> <span style="color:#75af00">oldName</span>
+<span style="color:#111">}</span>
+
+<span style="color:#00a8c8">type</span> <span style="color:#75af00">ReadA</span> <span style="color:#00a8c8">interface</span> <span style="color:#111">{</span>
+	<span style="color:#75af00">Name</span><span style="color:#111">()</span> <span style="color:#00a8c8">string</span>
+<span style="color:#111">}</span>
+
+<span style="color:#00a8c8">func</span> <span style="color:#75af00">evaluateExpressionOnA</span><span style="color:#111">(</span><span style="color:#75af00">a</span> <span style="color:#f92672">*</span><span style="color:#75af00">A</span><span style="color:#111">,</span> <span style="color:#75af00">expression</span> <span style="color:#00a8c8">string</span><span style="color:#111">)</span> <span style="color:#111">(</span><span style="color:#00a8c8">interface</span><span style="color:#111">{},</span> <span style="color:#00a8c8">error</span><span style="color:#111">)</span> <span style="color:#111">{</span>
+	<span style="color:#75af00">ast</span><span style="color:#111">,</span> <span style="color:#75af00">err</span> <span style="color:#f92672">:=</span> <span style="color:#75af00">parser</span><span style="color:#111">.</span><span style="color:#75af00">ParseExpr</span><span style="color:#111">(</span><span style="color:#75af00">expression</span><span style="color:#111">)</span>
+	<span style="color:#00a8c8">if</span> <span style="color:#75af00">err</span> <span style="color:#f92672">!=</span> <span style="color:#00a8c8">nil</span> <span style="color:#111">{</span>
+		<span style="color:#00a8c8">return</span> <span style="color:#00a8c8">nil</span><span style="color:#111">,</span> <span style="color:#75af00">errors</span><span style="color:#111">.</span><span style="color:#75af00">Errorf</span><span style="color:#111">(</span><span style="color:#d88200">&#34;parsing error: %s&#34;</span><span style="color:#111">,</span> <span style="color:#75af00">err</span><span style="color:#111">.</span><span style="color:#75af00">Error</span><span style="color:#111">())</span>
+	<span style="color:#111">}</span>
+	<span style="color:#75af00">pctx</span> <span style="color:#f92672">:=</span> <span style="color:#75af00">context</span><span style="color:#111">.</span><span style="color:#75af00">Background</span><span style="color:#111">()</span>
+	<span style="color:#75af00">pctx</span> <span style="color:#111">=</span> <span style="color:#75af00">context</span><span style="color:#111">.</span><span style="color:#75af00">WithValue</span><span style="color:#111">(</span><span style="color:#75af00">pctx</span><span style="color:#111">,</span> <span style="color:#d88200">&#34;a&#34;</span><span style="color:#111">,</span> <span style="color:#75af00">reflect</span><span style="color:#111">.</span><span style="color:#75af00">TypeOf</span><span style="color:#111">(</span><span style="color:#75af00">a</span><span style="color:#111">))</span>
+	<span style="color:#75af00">exp</span> <span style="color:#f92672">:=</span> <span style="color:#75af00">goel</span><span style="color:#111">.</span><span style="color:#75af00">NewCompiledExpression</span><span style="color:#111">(</span><span style="color:#75af00">pctx</span><span style="color:#111">,</span> <span style="color:#75af00">ast</span><span style="color:#111">)</span>
+	<span style="color:#00a8c8">if</span> <span style="color:#75af00">exp</span><span style="color:#111">.</span><span style="color:#75af00">Error</span><span style="color:#111">()</span> <span style="color:#f92672">!=</span> <span style="color:#00a8c8">nil</span> <span style="color:#111">{</span>
+		<span style="color:#00a8c8">return</span> <span style="color:#00a8c8">nil</span><span style="color:#111">,</span> <span style="color:#75af00">errors</span><span style="color:#111">.</span><span style="color:#75af00">Errorf</span><span style="color:#111">(</span><span style="color:#d88200">&#34;building error: %s&#34;</span><span style="color:#111">,</span> <span style="color:#75af00">exp</span><span style="color:#111">.</span><span style="color:#75af00">Error</span><span style="color:#111">().</span><span style="color:#75af00">Error</span><span style="color:#111">())</span>
+	<span style="color:#111">}</span>
+	<span style="color:#75af00">ectx</span> <span style="color:#f92672">:=</span> <span style="color:#75af00">context</span><span style="color:#111">.</span><span style="color:#75af00">Background</span><span style="color:#111">()</span>
+	<span style="color:#75af00">ectx</span> <span style="color:#111">=</span> <span style="color:#75af00">context</span><span style="color:#111">.</span><span style="color:#75af00">WithValue</span><span style="color:#111">(</span><span style="color:#75af00">pctx</span><span style="color:#111">,</span> <span style="color:#d88200">&#34;a&#34;</span><span style="color:#111">,</span> <span style="color:#75af00">reflect</span><span style="color:#111">.</span><span style="color:#75af00">ValueOf</span><span style="color:#111">(</span><span style="color:#75af00">a</span><span style="color:#111">))</span>
+	<span style="color:#00a8c8">return</span> <span style="color:#75af00">exp</span><span style="color:#111">.</span><span style="color:#75af00">Execute</span><span style="color:#111">(</span><span style="color:#75af00">ectx</span><span style="color:#111">)</span>
+<span style="color:#111">}</span>
+
+<span style="color:#00a8c8">func</span> <span style="color:#75af00">main</span><span style="color:#111">()</span> <span style="color:#111">{</span>
+	<span style="color:#75af00">a</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#75af00">A</span><span style="color:#111">{</span><span style="color:#d88200">&#34;joe&#34;</span><span style="color:#111">}</span>
+	<span style="color:#75af00">v</span><span style="color:#111">,</span> <span style="color:#75af00">err</span> <span style="color:#f92672">:=</span> <span style="color:#75af00">evaluateExpressionOnA</span><span style="color:#111">(</span><span style="color:#75af00">a</span><span style="color:#111">,</span> <span style="color:#d88200">`a.Name()`</span><span style="color:#111">)</span>
+	<span style="color:#00a8c8">if</span> <span style="color:#75af00">err</span> <span style="color:#f92672">!=</span> <span style="color:#00a8c8">nil</span> <span style="color:#111">{</span>
+		<span style="color:#75af00">fmt</span><span style="color:#111">.</span><span style="color:#75af00">Printf</span><span style="color:#111">(</span><span style="color:#d88200">&#34;error executing your expression: %s\n&#34;</span><span style="color:#111">,</span> <span style="color:#75af00">err</span><span style="color:#111">.</span><span style="color:#75af00">Error</span><span style="color:#111">())</span>
+	<span style="color:#111">}</span> <span style="color:#00a8c8">else</span> <span style="color:#111">{</span>
+		<span style="color:#75af00">fmt</span><span style="color:#111">.</span><span style="color:#75af00">Printf</span><span style="color:#111">(</span><span style="color:#d88200">&#34;a.Name() = %+v\n&#34;</span><span style="color:#111">,</span> <span style="color:#75af00">v</span><span style="color:#111">)</span>
+	<span style="color:#111">}</span>
+	<span style="color:#75af00">v</span><span style="color:#111">,</span> <span style="color:#75af00">err</span> <span style="color:#111">=</span> <span style="color:#75af00">evaluateExpressionOnA</span><span style="color:#111">(</span><span style="color:#75af00">a</span><span style="color:#111">,</span> <span style="color:#d88200">`a.SetName(&#34;jill&#34;)`</span><span style="color:#111">)</span>
+	<span style="color:#00a8c8">if</span> <span style="color:#75af00">err</span> <span style="color:#f92672">!=</span> <span style="color:#00a8c8">nil</span> <span style="color:#111">{</span>
+		<span style="color:#75af00">fmt</span><span style="color:#111">.</span><span style="color:#75af00">Printf</span><span style="color:#111">(</span><span style="color:#d88200">&#34;error executing your expression: %s\n&#34;</span><span style="color:#111">,</span> <span style="color:#75af00">err</span><span style="color:#111">.</span><span style="color:#75af00">Error</span><span style="color:#111">())</span>
+	<span style="color:#111">}</span> <span style="color:#00a8c8">else</span> <span style="color:#111">{</span>
+		<span style="color:#75af00">fmt</span><span style="color:#111">.</span><span style="color:#75af00">Printf</span><span style="color:#111">(</span><span style="color:#d88200">&#34;a.SetName(\&#34;jill\&#34;) = %+v\n&#34;</span><span style="color:#111">,</span> <span style="color:#75af00">v</span><span style="color:#111">)</span>
+	<span style="color:#111">}</span>
+	<span style="color:#75af00">v</span><span style="color:#111">,</span> <span style="color:#75af00">err</span> <span style="color:#111">=</span> <span style="color:#75af00">evaluateExpressionOnA</span><span style="color:#111">(</span><span style="color:#75af00">a</span><span style="color:#111">,</span> <span style="color:#d88200">`a.Name()`</span><span style="color:#111">)</span>
+	<span style="color:#00a8c8">if</span> <span style="color:#75af00">err</span> <span style="color:#f92672">!=</span> <span style="color:#00a8c8">nil</span> <span style="color:#111">{</span>
+		<span style="color:#75af00">fmt</span><span style="color:#111">.</span><span style="color:#75af00">Printf</span><span style="color:#111">(</span><span style="color:#d88200">&#34;error executing your expression: %s\n&#34;</span><span style="color:#111">,</span> <span style="color:#75af00">err</span><span style="color:#111">.</span><span style="color:#75af00">Error</span><span style="color:#111">())</span>
+	<span style="color:#111">}</span> <span style="color:#00a8c8">else</span> <span style="color:#111">{</span>
+		<span style="color:#75af00">fmt</span><span style="color:#111">.</span><span style="color:#75af00">Printf</span><span style="color:#111">(</span><span style="color:#d88200">&#34;a.Name() = %+v\n&#34;</span><span style="color:#111">,</span> <span style="color:#75af00">v</span><span style="color:#111">)</span>
+	<span style="color:#111">}</span>
+<span style="color:#111">}</span></code></pre></div>
+<p>Will Output:</p>
+
+<pre><code>a.Name() = joe
+a.SetName(&quot;jill&quot;) = joe
+a.Name() = jill
+</code></pre>
+
+<p>After changing the evaluateExpressionOnA code to the following, the second
+expression will result in an error:</p>
+<div class="highlight"><pre style="color:#272822;background-color:#fafafa;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#00a8c8">func</span> <span style="color:#75af00">evaluateExpressionOnA</span><span style="color:#111">(</span><span style="color:#75af00">a</span> <span style="color:#f92672">*</span><span style="color:#75af00">A</span><span style="color:#111">,</span> <span style="color:#75af00">expression</span> <span style="color:#00a8c8">string</span><span style="color:#111">)</span> <span style="color:#111">(</span><span style="color:#00a8c8">interface</span><span style="color:#111">{},</span> <span style="color:#00a8c8">error</span><span style="color:#111">)</span> <span style="color:#111">{</span>
+	<span style="color:#75af00">ast</span><span style="color:#111">,</span> <span style="color:#75af00">err</span> <span style="color:#f92672">:=</span> <span style="color:#75af00">parser</span><span style="color:#111">.</span><span style="color:#75af00">ParseExpr</span><span style="color:#111">(</span><span style="color:#75af00">expression</span><span style="color:#111">)</span>
+	<span style="color:#00a8c8">if</span> <span style="color:#75af00">err</span> <span style="color:#f92672">!=</span> <span style="color:#00a8c8">nil</span> <span style="color:#111">{</span>
+		<span style="color:#00a8c8">return</span> <span style="color:#00a8c8">nil</span><span style="color:#111">,</span> <span style="color:#75af00">errors</span><span style="color:#111">.</span><span style="color:#75af00">Errorf</span><span style="color:#111">(</span><span style="color:#d88200">&#34;parsing error: %s&#34;</span><span style="color:#111">,</span> <span style="color:#75af00">err</span><span style="color:#111">.</span><span style="color:#75af00">Error</span><span style="color:#111">())</span>
+	<span style="color:#111">}</span>
+	<span style="color:#75af00">pctx</span> <span style="color:#f92672">:=</span> <span style="color:#75af00">context</span><span style="color:#111">.</span><span style="color:#75af00">Background</span><span style="color:#111">()</span>
+	<span style="color:#00a8c8">var</span> <span style="color:#75af00">readA</span> <span style="color:#75af00">ReadA</span>
+	<span style="color:#75af00">pctx</span> <span style="color:#111">=</span> <span style="color:#75af00">context</span><span style="color:#111">.</span><span style="color:#75af00">WithValue</span><span style="color:#111">(</span><span style="color:#75af00">pctx</span><span style="color:#111">,</span> <span style="color:#d88200">&#34;a&#34;</span><span style="color:#111">,</span> <span style="color:#75af00">reflect</span><span style="color:#111">.</span><span style="color:#75af00">TypeOf</span><span style="color:#111">(</span><span style="color:#f92672">&amp;</span><span style="color:#75af00">readA</span><span style="color:#111">).</span><span style="color:#75af00">Elem</span><span style="color:#111">())</span>
+	<span style="color:#75af00">exp</span> <span style="color:#f92672">:=</span> <span style="color:#75af00">goel</span><span style="color:#111">.</span><span style="color:#75af00">NewCompiledExpression</span><span style="color:#111">(</span><span style="color:#75af00">pctx</span><span style="color:#111">,</span> <span style="color:#75af00">ast</span><span style="color:#111">)</span>
+	<span style="color:#00a8c8">if</span> <span style="color:#75af00">exp</span><span style="color:#111">.</span><span style="color:#75af00">Error</span><span style="color:#111">()</span> <span style="color:#f92672">!=</span> <span style="color:#00a8c8">nil</span> <span style="color:#111">{</span>
+		<span style="color:#00a8c8">return</span> <span style="color:#00a8c8">nil</span><span style="color:#111">,</span> <span style="color:#75af00">errors</span><span style="color:#111">.</span><span style="color:#75af00">Errorf</span><span style="color:#111">(</span><span style="color:#d88200">&#34;building error: %s&#34;</span><span style="color:#111">,</span> <span style="color:#75af00">exp</span><span style="color:#111">.</span><span style="color:#75af00">Error</span><span style="color:#111">().</span><span style="color:#75af00">Error</span><span style="color:#111">())</span>
+	<span style="color:#111">}</span>
+	<span style="color:#75af00">ectx</span> <span style="color:#f92672">:=</span> <span style="color:#75af00">context</span><span style="color:#111">.</span><span style="color:#75af00">Background</span><span style="color:#111">()</span>
+	<span style="color:#75af00">ectx</span> <span style="color:#111">=</span> <span style="color:#75af00">context</span><span style="color:#111">.</span><span style="color:#75af00">WithValue</span><span style="color:#111">(</span><span style="color:#75af00">pctx</span><span style="color:#111">,</span> <span style="color:#d88200">&#34;a&#34;</span><span style="color:#111">,</span> <span style="color:#75af00">reflect</span><span style="color:#111">.</span><span style="color:#75af00">ValueOf</span><span style="color:#111">(</span><span style="color:#75af00">a</span><span style="color:#111">))</span>
+	<span style="color:#00a8c8">return</span> <span style="color:#75af00">exp</span><span style="color:#111">.</span><span style="color:#75af00">Execute</span><span style="color:#111">(</span><span style="color:#75af00">ectx</span><span style="color:#111">)</span>
+<span style="color:#111">}</span></code></pre></div>
+<p>And it will output:</p>
+
+<pre><code>a.Name() = joe
+error executing your expression: building error: 3: unknown selector SetName for main.ReadA
+a.Name() = joe
+</code></pre>
+
+
+
+
+    
+    
+        <div class="chevrons">
+    <div id="navigation">
+</div>
+  </div>
+
+  </section>
+</article>
+
+<footer>
+
+<div class="footline">
+    
+
+    
+
+    
+
+    
+    <div class="github-link">
+      <a href="https://github.com/homedepot/goel/edit/master/site/content/_index.md" target="blank"><i class="fa fa-code-fork"></i>
+        Improve this page</a>
+    </div>
+    
+  </div>
+
+
+	<div>
+
+
+  
+    Create a content/_footer.md file to customize the footer content
+  
+
+
+
+	</div>
+</footer>
+
+<script src="/goel/js/clipboard.min.js"></script>
+
+<link href="/goel/css/featherlight.min.css" rel="stylesheet">
+<script src="/goel/js/featherlight.min.js"></script>
+
+
+
+<script src="/goel/theme-flex/script.js"></script>
+
+
+    
+
+    
+    
+
+    
+  </body>
+</html>

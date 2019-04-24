@@ -1,0 +1,29 @@
+[
+{
+	"uri": "https://homedepot.github.io/goel/",
+	"title": "",
+	"tags": [],
+	"description": "",
+	"content": " Documentation What is GoEL? GoEL is an interpreter for golang expressions. Expressions are handled in 3 steps. First, the expression needs to be parsed by the go expression parsing API that produces an AST. Second, the expression is \u0026ldquo;compiled\u0026rdquo; by the goel API that takes the AST and an accompanying Context containing information about available variables, types, and functions. Third, the expression can be executed, multiple times, by passing in an execution Context containing the values of the variables and functions.\nThe Parsing Context The parsing context contains type information for variables, types and functions. For each identifier that is not a built (e.g. true or int), the parsing context is required to return the reflect.Type for the identifier. For instance, if an int variable named foo needs to be exposed to the expression being compiled, an entry should be added to the parsing context named \u0026ldquo;foo\u0026rdquo; and it should have the value of reflect.Type for int.\nThe Execution Context The Execution Context contains the actual values that will be made available to the expression when it is executed. There should be an entry in the execution context for each value in the parsing context. In the case of variables and functions the execution context must contain the reflect.Value for the variable or function. In the case of types, the reflect.Type value passed to the parsing context should be passed.\n   Class of Identifier Parsing Context Value Execution Context Value     type reflect.TypeOf(\u0026lt;the type\u0026gt;) reflect.TypeOf(\u0026lt;the type\u0026gt;)   variable reflect.TypeOf(\u0026lt;the variable\u0026gt;) reflect.ValueOf(\u0026lt;the variable\u0026gt;)   function reflect.TypeOf(\u0026lt;function name\u0026gt;) reflect.ValueOf(\u0026lt;function name\u0026gt;)    Safety This API is designed to run a stateless expression but the rules of go do not require that you make things stateless. You could, for instance, have a variable for a map that a function call can modify. This is unsafe. It produces code that is likely to have bugs. Also because structs and interfaces can have functions attached and GoEL gives you access to those methods, you may be able to modify the variables passed into the context. In most cases it would be best to pass readonly interfaces of your types. For example the following code passes a struct by reference to the context and does not prevent a call to A.SetName:\npackage main import ( \u0026#34;context\u0026#34; \u0026#34;fmt\u0026#34; \u0026#34;github.com/homedepot/goel\u0026#34; \u0026#34;github.com/pkg/errors\u0026#34; \u0026#34;go/parser\u0026#34; \u0026#34;reflect\u0026#34; ) type A struct { name string } func (a *A) Name() string { return a.name } func (a *A) SetName(newName string) string { oldName := a.name a.name = newName return oldName } type ReadA interface { Name() string } func evaluateExpressionOnA(a *A, expression string) (interface{}, error) { ast, err := parser.ParseExpr(expression) if err != nil { return nil, errors.Errorf(\u0026#34;parsing error: %s\u0026#34;, err.Error()) } pctx := context.Background() pctx = context.WithValue(pctx, \u0026#34;a\u0026#34;, reflect.TypeOf(a)) exp := goel.NewCompiledExpression(pctx, ast) if exp.Error() != nil { return nil, errors.Errorf(\u0026#34;building error: %s\u0026#34;, exp.Error().Error()) } ectx := context.Background() ectx = context.WithValue(pctx, \u0026#34;a\u0026#34;, reflect.ValueOf(a)) return exp.Execute(ectx) } func main() { a := \u0026amp;A{\u0026#34;joe\u0026#34;} v, err := evaluateExpressionOnA(a, `a.Name()`) if err != nil { fmt.Printf(\u0026#34;error executing your expression: %s\\n\u0026#34;, err.Error()) } else { fmt.Printf(\u0026#34;a.Name() = %+v\\n\u0026#34;, v) } v, err = evaluateExpressionOnA(a, `a.SetName(\u0026#34;jill\u0026#34;)`) if err != nil { fmt.Printf(\u0026#34;error executing your expression: %s\\n\u0026#34;, err.Error()) } else { fmt.Printf(\u0026#34;a.SetName(\\\u0026#34;jill\\\u0026#34;) = %+v\\n\u0026#34;, v) } v, err = evaluateExpressionOnA(a, `a.Name()`) if err != nil { fmt.Printf(\u0026#34;error executing your expression: %s\\n\u0026#34;, err.Error()) } else { fmt.Printf(\u0026#34;a.Name() = %+v\\n\u0026#34;, v) } } Will Output:\na.Name() = joe a.SetName(\u0026quot;jill\u0026quot;) = joe a.Name() = jill  After changing the evaluateExpressionOnA code to the following, the second expression will result in an error:\nfunc evaluateExpressionOnA(a *A, expression string) (interface{}, error) { ast, err := parser.ParseExpr(expression) if err != nil { return nil, errors.Errorf(\u0026#34;parsing error: %s\u0026#34;, err.Error()) } pctx := context.Background() var readA ReadA pctx = context.WithValue(pctx, \u0026#34;a\u0026#34;, reflect.TypeOf(\u0026amp;readA).Elem()) exp := goel.NewCompiledExpression(pctx, ast) if exp.Error() != nil { return nil, errors.Errorf(\u0026#34;building error: %s\u0026#34;, exp.Error().Error()) } ectx := context.Background() ectx = context.WithValue(pctx, \u0026#34;a\u0026#34;, reflect.ValueOf(a)) return exp.Execute(ectx) } And it will output:\na.Name() = joe error executing your expression: building error: 3: unknown selector SetName for main.ReadA a.Name() = joe  "
+},
+{
+	"uri": "https://homedepot.github.io/goel/credits/",
+	"title": "",
+	"tags": [],
+	"description": "",
+	"content": " Credits GoEL is maintained by Dana H. P\u0026rsquo;Simer. Dana is a Software Engineer Principal at The Home Depot.\n"
+},
+{
+	"uri": "https://homedepot.github.io/goel/categories/",
+	"title": "Categories",
+	"tags": [],
+	"description": "",
+	"content": ""
+},
+{
+	"uri": "https://homedepot.github.io/goel/tags/",
+	"title": "Tags",
+	"tags": [],
+	"description": "",
+	"content": ""
+}]

@@ -63,9 +63,31 @@ var tests []test
 var x int
 var c chan int
 
+type testStruct struct {
+	X, Y int
+	Name string
+}
+
+func (ts testStruct) GetName() string {
+	return ts.Name
+}
+
+func (ts *testStruct) SetName(newName string) string {
+	oldName := ts.Name
+	ts.Name = newName
+	return oldName
+}
+
+type NameGetter interface {
+	GetName() string
+}
+
 func bar() interface{} {
 	return "bar"
 }
+var ts = testStruct{1,2, "Joe"}
+var ng NameGetter = &ts
+var ngType = reflect.TypeOf(&ng).Elem() // get the type of the NameGetter interface
 
 func init() {
 	var testArray [6]int
@@ -793,7 +815,12 @@ func init() {
 			},
 		},
 		{
-			name:          "struct member access",
+			name:                  "member access, selectee not found",
+			expression:            "req.method",
+			expectedBuildingError: errors.New("1: unknown identifier: req"),
+		},
+		{
+			name:          "pointer to struct member access",
 			expression:    "req.Method",
 			expectedValue: reflect.ValueOf("GET"),
 			parsingContext: map[string]interface{}{
@@ -804,7 +831,7 @@ func init() {
 			},
 		},
 		{
-			name:          "struct member Call",
+			name:          "pointer to struct member Call",
 			expression:    `req.Header.Get("Content-Type")`,
 			expectedValue: reflect.ValueOf("application/json"),
 			parsingContext: map[string]interface{}{
@@ -815,7 +842,29 @@ func init() {
 			},
 		},
 		{
-			name:          "struct member Call comparison",
+			name:          "struct member access",
+			expression:    "req.Method",
+			expectedValue: reflect.ValueOf("GET"),
+			parsingContext: map[string]interface{}{
+				"req": reflect.TypeOf(*testRequest),
+			},
+			executionContext: map[string]interface{}{
+				"req": reflect.ValueOf(*testRequest),
+			},
+		},
+		{
+			name:          "struct member Call",
+			expression:    `req.Header.Get("Content-Type")`,
+			expectedValue: reflect.ValueOf("application/json"),
+			parsingContext: map[string]interface{}{
+				"req": reflect.TypeOf(*testRequest),
+			},
+			executionContext: map[string]interface{}{
+				"req": reflect.ValueOf(*testRequest),
+			},
+		},
+		{
+			name:          "pointer to struct member Call comparison",
 			expression:    `req.Header.Get("Content-Type") == "application/json"`,
 			expectedValue: reflect.ValueOf(true),
 			parsingContext: map[string]interface{}{
@@ -823,6 +872,50 @@ func init() {
 			},
 			executionContext: map[string]interface{}{
 				"req": reflect.ValueOf(testRequest),
+			},
+		},
+		{
+			name:          "Can access non interface methods even on interface typed variable GetName",
+			expression:    `ts.GetName()`,
+			expectedValue: reflect.ValueOf("Joe"),
+			parsingContext: map[string]interface{}{
+				"ts": reflect.TypeOf(ng),
+			},
+			executionContext: map[string]interface{}{
+				"ts": reflect.ValueOf(ng),
+			},
+		},
+		{
+			name:          "Can access non interface methods even on interface typed variable SetName",
+			expression:    `ts.SetName("Jill")`,
+			expectedValue: reflect.ValueOf("Joe"),
+			parsingContext: map[string]interface{}{
+				"ts": reflect.TypeOf(&ts),
+			},
+			executionContext: map[string]interface{}{
+				"ts": reflect.ValueOf(&testStruct{0,0, "Joe"}),
+			},
+		},
+		{
+			name:          "Restrict access to interface only (success)",
+			expression:    `ts.GetName()`,
+			expectedValue: reflect.ValueOf("Joe"),
+			parsingContext: map[string]interface{}{
+				"ts": ngType,
+			},
+			executionContext: map[string]interface{}{
+				"ts": reflect.ValueOf(ng),
+			},
+		},
+		{
+			name:          "Restrict access to interface only (fail)",
+			expression:    `ts.SetName("Jill")`,
+			expectedBuildingError: errors.New("4: unknown selector SetName for goel_test.NameGetter"),
+			parsingContext: map[string]interface{}{
+				"ts": ngType,
+			},
+			executionContext: map[string]interface{}{
+				"ts": reflect.ValueOf(ng),
 			},
 		},
 		{
