@@ -1,2 +1,9 @@
 coverage.txt
 .DS_Store
+
+/fuzz/*.zip
+/fuzz/crashers/
+/fuzz/corpus/
+!/fuzz/corpus/add.txt
+!/fuzz/corpus/sum.txt
+/fuzz/suppressions/
