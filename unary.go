@@ -56,7 +56,10 @@ func evalUnaryExpr(pctx context.Context, exp *ast.UnaryExpr) compiledExpression 
 	if xexp.Error() != nil {
 		return xexp
 	}
-	expTyp, _ := xexp.ReturnType()
+	expTyp, err := xexp.ReturnType()
+	if err != nil {
+		return newErrorExpression(errors.Errorf("unexpected return type: %v", err))
+	}
 	switch {
 	case expTyp.AssignableTo(BoolType):
 		if exp.Op == token.NOT {
